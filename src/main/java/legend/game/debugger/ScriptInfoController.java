@@ -9,6 +9,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
@@ -24,13 +25,14 @@ import legend.game.modding.events.scripting.ScriptDeallocatedEvent;
 import legend.game.modding.events.scripting.ScriptTickEvent;
 import legend.game.scripting.ScriptState;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
 import static legend.game.Scus94491BpeSegment_800b.scriptStatePtrArr_800bc1c0;
 
-public class ScriptDebuggerController {
-  private static final Set<ScriptDebuggerController> INSTANCES = new HashSet<>();
+public class ScriptInfoController {
+  private static final Set<ScriptInfoController> INSTANCES = new HashSet<>();
 
   @FXML
   private ComboBox<ListItem> scriptSelector;
@@ -38,6 +40,8 @@ public class ScriptDebuggerController {
 
   @FXML
   private CheckBox scriptLog;
+  @FXML
+  private Button liveDebug;
 
   @FXML
   private ListView<ListItem> scriptStorage;
@@ -115,11 +119,28 @@ public class ScriptDebuggerController {
     synchronized(INSTANCES) {
       Scus94491BpeSegment.scriptLog[this.getSelectedScript()] = this.scriptLog.isSelected();
 
-      for(final ScriptDebuggerController instance : INSTANCES) {
+      for(final ScriptInfoController instance : INSTANCES) {
         if(instance.getSelectedScript() == this.getSelectedScript()) {
           instance.scriptLog.setSelected(this.scriptLog.isSelected());
         }
       }
+    }
+  }
+
+  public void liveDebugClick(final ActionEvent event) {
+    final ScriptState<?> state = scriptStatePtrArr_800bc1c0[this.getSelectedScript()];
+
+    if(!state.hasDebugger()) {
+      final Thread liveDebuggerThread = new Thread(() -> {
+        try {
+          state.attachDebugger(new ScriptDebugger());
+        } catch(final IOException e) {
+          throw new RuntimeException(e);
+        }
+      });
+
+      liveDebuggerThread.setName("Script Debugger " + state.index);
+      liveDebuggerThread.start();
     }
   }
 

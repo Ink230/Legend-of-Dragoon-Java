@@ -185,8 +185,8 @@ public class CombatDebuggerController {
 
     final ScriptState<BattleObject27c> state = _8006e398.bobjIndices_e0c[this.bobjList.getSelectionModel().getSelectedIndex()];
 
-    final ScriptDebugger scriptDebugger = new ScriptDebugger();
-    scriptDebugger.preselectScript(state.index).start(new Stage());
+    final ScriptInfo scriptInfo = new ScriptInfo();
+    scriptInfo.preselectScript(state.index).start(new Stage());
   }
 
   public void refreshStats(final ActionEvent event) {

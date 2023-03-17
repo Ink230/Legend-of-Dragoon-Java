@@ -106,7 +106,7 @@ public class DebuggerController {
 
   @FXML
   private void showScriptDebugger(final ActionEvent event) throws Exception {
-    new ScriptDebugger().start(new Stage());
+    new ScriptInfo().start(new Stage());
   }
 
   @FXML

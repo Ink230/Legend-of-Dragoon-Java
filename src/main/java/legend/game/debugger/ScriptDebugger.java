@@ -1,39 +1,39 @@
 package legend.game.debugger;
 
-import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
+import legend.core.opengl.Camera;
+import legend.core.opengl.Context;
+import legend.core.opengl.Font;
+import legend.core.opengl.GuiManager;
+import legend.core.opengl.Window;
 
-public class ScriptDebugger extends Application {
-  private ScriptDebuggerController controller;
+import java.io.IOException;
 
-  private int preselectScript;
+public class ScriptDebugger {
+  private final Window window;
+  private final Context ctx;
+  private final GuiManager guiManager;
 
-  public ScriptDebugger preselectScript(final int preselectScript) {
-    this.preselectScript = preselectScript;
-    return this;
-  }
+  private final ScriptDebuggerGui gui;
 
-  @Override
-  public void start(final Stage stage) throws Exception {
-    final FXMLLoader loader = new FXMLLoader(this.getClass().getResource("script_debugger.fxml"));
-    final Parent root = loader.load();
-    final Scene scene = new Scene(root);
-    scene.getStylesheets().add(this.getClass().getResource("script_debugger.css").toExternalForm());
+  public ScriptDebugger() throws IOException {
+    this.window = new Window("Script Debugger", 728, 600);
+    this.ctx = new Context(this.window, new Camera(0.0f, 0.0f));
 
-    this.controller = loader.getController();
-    this.controller.selectScript(this.preselectScript);
+    this.guiManager = new GuiManager(this.window);
+    this.window.setEventPoller(this.guiManager::captureInput);
 
-    stage.setTitle("Script Debugger");
-    stage.setScene(scene);
-    stage.show();
-  }
+    final Font font = new Font("gfx/fonts/Consolas.ttf");
+    this.guiManager.setFont(font);
 
-  @Override
-  public void stop() throws Exception {
-    this.controller.uninitialize();
-    super.stop();
+    this.gui = new ScriptDebuggerGui();
+    this.guiManager.pushGui(this.gui);
+
+    this.ctx.onDraw(() -> this.guiManager.draw(this.ctx.getWidth(), this.ctx.getHeight(), this.ctx.getWidth() / this.window.getScale(), this.ctx.getHeight() / this.window.getScale()));
+
+    this.window.show();
+    this.window.run();
+
+    this.guiManager.free();
+    font.free();
   }
 }

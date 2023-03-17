@@ -174,8 +174,8 @@ public class SmapDebuggerController {
 
     final ScriptState<SubmapObject210> state = sobjs_800c6880[this.sobjList.getSelectionModel().getSelectedIndex()];
 
-    final ScriptDebugger scriptDebugger = new ScriptDebugger();
-    scriptDebugger.preselectScript(state.index).start(new Stage());
+    final ScriptInfo scriptInfo = new ScriptInfo();
+    scriptInfo.preselectScript(state.index).start(new Stage());
   }
 
   public void refreshValues(final ActionEvent event) {

@@ -5,6 +5,7 @@ import legend.core.MathHelper;
 import legend.core.memory.Method;
 import legend.game.Scus94491BpeSegment_8004;
 import legend.game.combat.types.BattleObject27c;
+import legend.game.debugger.ScriptDebugger;
 import legend.game.modding.events.EventManager;
 import legend.game.modding.events.scripting.ScriptDeallocatedEvent;
 import legend.game.modding.events.scripting.ScriptTickEvent;
@@ -114,11 +115,25 @@ public class ScriptState<T> {
   public int _f4;
   public int ui_fc;
 
+  private ScriptDebugger debugger;
+
   public ScriptState(final ScriptManager manager, final int index, final String name, @Nullable final T innerStruct) {
     this.manager = manager;
     this.index = index;
     this.name = name;
     this.innerStruct_00 = innerStruct;
+  }
+
+  public void attachDebugger(final ScriptDebugger debugger) {
+    this.debugger = debugger;
+  }
+
+  public void detachDebugger() {
+    this.debugger = null;
+  }
+
+  public boolean hasDebugger() {
+    return this.debugger != null;
   }
 
   public void setTicker(@Nullable final BiConsumer<ScriptState<T>, T> callback) {
