@@ -251,7 +251,7 @@ public class Fmv {
     GPU.rescaleNow(1);
 
     try {
-      sound = AudioSystem.getSourceDataLine(new AudioFormat(44100, 16, 2, true, false));
+      sound = AudioSystem.getSourceDataLine(new AudioFormat(37800, 16, 2, true, false));
       sound.open();
       sound.start();
     } catch(final LineUnavailableException|IllegalArgumentException e) {
