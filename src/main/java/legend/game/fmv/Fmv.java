@@ -11,12 +11,16 @@ import legend.game.unpacker.FileData;
 import legend.game.unpacker.Unpacker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.util.opus.OpusFile;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.Arrays;
 
 import static legend.core.GameEngine.GPU;
@@ -617,43 +621,64 @@ public class Fmv {
     }
   }
 
+  final static int OGG_SAMPLE_LIMIT = 960;
+
   public static void playXa(final int archiveIndex, final int fileIndex) {
-    final byte[] data = new byte[2352];
-    final SectorHeader header = new SectorHeader(data);
+    try(final MemoryStack memoryStack = MemoryStack.stackPush()) {
+      final IntBuffer error = memoryStack.mallocInt(1);
 
-    final int offset = archiveIndex == 3 ? 4 : 16;
+      final String path = System.getProperty("user.dir") + "\\files\\XA\\LODXA0" + archiveIndex + '\\' + fileIndex + ".ogg";
 
-    final byte[] fileData = Unpacker.loadFile(System.getProperty("user.dir") + "\\files\\XA\\LODXA0" + archiveIndex + ".XA").data();
-    sector = 0;
+      final long oggFile = OpusFile.op_open_file(path, error);
 
-    try {
-      sound = AudioSystem.getSourceDataLine(new AudioFormat(44100, 16, 2, true, false));
-      sound.open();
-      sound.start();
-    } catch(final LineUnavailableException|IllegalArgumentException e) {
-      LOGGER.error("Failed to start audio for FMV");
-    }
-
-    for(int sector = fileIndex; sector < fileData.length / 0x930; sector += offset) {
-      System.arraycopy(fileData, sector * data.length, data, 0, data.length);
-
-      final byte[] decodedXaAdpcm = XaAdpcm.decode(data, data[19]);
-
-      // Halve the volume
-      for(int i = 0; i < decodedXaAdpcm.length; i++) {
-        decodedXaAdpcm[i] >>= 1;
+      if (error.get() != 0) {
+        throw new RuntimeException("Failed to open file " + path);
       }
+
+      final int channelCount = OpusFile.op_channel_count(oggFile, -1);
+
+      try {
+        sound = AudioSystem.getSourceDataLine(new AudioFormat(48000, 16, channelCount, true, true));
+        sound.open();
+        sound.start();
+      } catch(final LineUnavailableException|IllegalArgumentException e) {
+        LOGGER.error("Failed to start audio for FMV");
+        return;
+      }
+
+      final int sampleCount = (int) OpusFile.op_pcm_total(oggFile, -1);
+
+      final short[] rawPcm = new short[sampleCount];
+
+      final int limit = (int) Math.ceil((double) sampleCount / OGG_SAMPLE_LIMIT * channelCount);
+
+      final ShortBuffer pcmBuffer = memoryStack.mallocShort(OGG_SAMPLE_LIMIT * channelCount);
+      final IntBuffer li = memoryStack.mallocInt(1);
+
+      for(int i = 0; i < limit; i++) {
+        pcmBuffer.position(0);
+        OpusFile.op_read(oggFile, pcmBuffer, li);
+        pcmBuffer.position(0);
+        pcmBuffer.get(0, rawPcm, i * OGG_SAMPLE_LIMIT * channelCount, Math.min(OGG_SAMPLE_LIMIT * channelCount, sampleCount - i * OGG_SAMPLE_LIMIT * channelCount));
+      }
+
+      OpusFile.op_free(oggFile);
+
+      final ByteBuffer buffer = ByteBuffer.allocate(rawPcm.length * 2);
+
+      for(final short value : rawPcm) {
+        buffer.putShort(value);
+      }
+
+      final byte[] pcmBytes = buffer.array();
 
       if(sound != null) {
-        sound.write(decodedXaAdpcm, 0, decodedXaAdpcm.length);
+
+        sound.write(pcmBytes, 0, pcmBytes.length);
       }
 
-      if(header.submode.isEof()) {
-        break;
-      }
+      sound.close();
+      sound = null;
     }
-
-    sound.close();
-    sound = null;
   }
 }

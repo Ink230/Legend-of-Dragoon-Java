@@ -123,6 +123,11 @@ final class Track {
       this.old[lr] = sample;
     }
 
+    //TODO halves volume should be removed after OpenAL
+    for(int i = 0; i < list.size(); i++ ) {
+      list.set(i, (short)(list.getShort(i) >> 1));
+    }
+
     return list;
   }
 
