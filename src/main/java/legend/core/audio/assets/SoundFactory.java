@@ -101,10 +101,12 @@ public final class SoundFactory {
 
       int nextOffset = data.size();
       for(int i = upperBound; i >= 0; i--) {
-        final int startOffset = data.readUShort(2 + i * 2);
-        breathControls[i] = data.slice(startOffset, nextOffset - startOffset).getBytes();
+        final int startOffset = data.readShort(2 + i * 2);
 
-        nextOffset = startOffset;
+        if(startOffset != -1) {
+          breathControls[i] = data.slice(startOffset, nextOffset - startOffset).getBytes();
+          nextOffset = startOffset;
+        }
       }
 
       return breathControls;
