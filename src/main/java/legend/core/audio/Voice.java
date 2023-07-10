@@ -14,7 +14,7 @@ final class Voice {
   private static final Logger LOGGER = LogManager.getFormatterLogger();
   private static final Marker VOICE_MARKER = MarkerManager.getMarker("VOICE");
 
-  private static final short[] EMPTY = {0, 0, 0};
+  protected static final short[] EMPTY = {0, 0, 0};
   private final int index;
   private final LookupTables lookupTables;
 
@@ -51,14 +51,14 @@ final class Voice {
 
 
   private boolean hasSamples;
-  private final short[] samples = new short[31];
+  private final short[] samples = new short[28 + EMPTY.length];
   private final Voice previousVoice;
   private short latestSample;
 
   private float outLeft;
   private float outRight;
 
-  Voice(final int index, final LookupTables lookupTables, final int bufferSize, final boolean stereo, final Voice previousVoice) {
+  Voice(final int index, final LookupTables lookupTables, final Voice previousVoice) {
     this.index = index;
     this.lookupTables = lookupTables;
     this.previousVoice = previousVoice;
@@ -100,7 +100,7 @@ final class Voice {
 
   private short sampleVoice() {
     if(!this.hasSamples) {
-      System.arraycopy(this.samples, 28, this.samples, 0, 3);
+      System.arraycopy(this.samples, 28, this.samples, 0, EMPTY.length);
 
       this.soundBankEntry.loadSamples(this.samples);
 
@@ -248,7 +248,7 @@ final class Voice {
 
     this.used = true;
     this.hasSamples = false;
-    System.arraycopy(EMPTY, 0, this.samples, 0, 3);
+    System.arraycopy(EMPTY, 0, this.samples, 28, EMPTY.length);
   }
 
   void keyOff() {
@@ -271,7 +271,7 @@ final class Voice {
   }
 
   boolean isFinished() {
-    return this.adsrEnvelope.isFinished() || (this.soundBankEntry.isEnd() && this.counter.getCurrentSampleIndex() >= 3);
+    return this.adsrEnvelope.isFinished() || (this.soundBankEntry.isEnd() && this.counter.getCurrentSampleIndex() >= EMPTY.length);
   }
 
   void clear() {

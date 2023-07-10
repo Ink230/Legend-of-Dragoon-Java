@@ -1,7 +1,7 @@
 package legend.core.audio;
 
 final class VoiceCounter {
-  private final static int START_OFFSET = 0x3000;
+  private final static int START_OFFSET = Voice.EMPTY.length << 12;
   private int counter = START_OFFSET;
 
   int getCurrentSampleIndex() {

@@ -35,7 +35,7 @@ final class SoundBankEntry {
       default -> throw new RuntimeException("Unknown Sound Bank Flag " + this.pcm.right()[this.index] + " !");
     }
 
-    System.arraycopy(this.pcm.left()[this.index], 0, samples, 3, 28);
+    System.arraycopy(this.pcm.left()[this.index], 0, samples, Voice.EMPTY.length, 28);
   }
 
   boolean isEnd() {
