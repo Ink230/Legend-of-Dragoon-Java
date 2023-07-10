@@ -42,12 +42,14 @@ final class LookupTables {
     0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F,
   };
 
-  LookupTables(final int sampleRateStep, final int interpolationStep) {
+  LookupTables(final int sampleRateStep, final int interpolationBitDepth) {
     this.sampleRates = new int[sampleRateStep * 12];
 
     for(int i = 0; i < this.sampleRates.length; i++) {
       this.sampleRates[i] = (int)Math.round(BASE_SAMPLE_RATE * Math.pow(2, i / (double)this.sampleRates.length));
     }
+
+    final int interpolationStep = 1 << interpolationBitDepth;
 
     this.interpolationWeights = new double[interpolationStep][];
 

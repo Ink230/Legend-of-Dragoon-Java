@@ -18,7 +18,7 @@ final class Voice {
   private final int index;
   private final LookupTables lookupTables;
 
-  private final VoiceCounter counter = new VoiceCounter();
+  private final VoiceCounter counter;
   private final AdsrEnvelope adsrEnvelope = new AdsrEnvelope();
   private final SoundBankEntry soundBankEntry = new SoundBankEntry();
 
@@ -58,10 +58,11 @@ final class Voice {
   private float outLeft;
   private float outRight;
 
-  Voice(final int index, final LookupTables lookupTables, final Voice previousVoice) {
+  Voice(final int index, final LookupTables lookupTables, final Voice previousVoice, final int interpolationBitDepth) {
     this.index = index;
     this.lookupTables = lookupTables;
     this.previousVoice = previousVoice;
+    this.counter = new VoiceCounter(interpolationBitDepth);
   }
 
   void tick() {

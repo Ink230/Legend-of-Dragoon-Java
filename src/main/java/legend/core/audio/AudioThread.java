@@ -53,14 +53,19 @@ public final class AudioThread implements Runnable {
   /**
    * @param frequency Amount of updates per second. Has to be a divisor of 1_000_000_000 and 44_100 (1, 2, 4, 5, 10, 20, 25, 50, 100).
    * @param voiceCount Amount of voices that can play at once. Retail uses 24.
+   * @param interpolationBitDepth Amount of bits used for the interpolation window. Larger values will result in a big lookup table. Retail value is 8.
    */
-  public AudioThread(final int frequency, final boolean stereo, final int voiceCount) {
+  public AudioThread(final int frequency, final boolean stereo, final int voiceCount, final int interpolationBitDepth) {
     if(1_000_000_000 % frequency != 0) {
       throw new IllegalArgumentException("Nanos (1_000_000_000) is not divisible by frequency " + frequency);
     }
 
     if(44_100 % frequency != 0) {
       throw new IllegalArgumentException("Sample Rate (44_100) is not divisible by frequency " + frequency);
+    }
+
+    if(interpolationBitDepth > 12) {
+      throw new IllegalArgumentException("Interpolation Bit Depth must be less or equal to 12");
     }
 
     this.nanosPerTick = 1_000_000_000 / frequency;
@@ -83,14 +88,14 @@ public final class AudioThread implements Runnable {
 
     this.stereo = stereo;
 
-    final LookupTables lookupTables = new LookupTables(64, 512);
+    final LookupTables lookupTables = new LookupTables(64, interpolationBitDepth);
 
     this.voices = new Voice[voiceCount];
 
-    this.voices[0] = new Voice(0, lookupTables, null);
+    this.voices[0] = new Voice(0, lookupTables, null, interpolationBitDepth);
 
     for(int voice = 1; voice < this.voices.length; voice++) {
-      this.voices[voice] = new Voice(voice, lookupTables, this.voices[voice - 1]);
+      this.voices[voice] = new Voice(voice, lookupTables, this.voices[voice - 1], interpolationBitDepth);
     }
 
     this.output = new BufferedSound(this.samplesPerTick, stereo);

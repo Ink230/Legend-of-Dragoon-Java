@@ -4,12 +4,20 @@ final class VoiceCounter {
   private final static int START_OFFSET = Voice.EMPTY.length << 12;
   private int counter = START_OFFSET;
 
+  private final int interpolationShift;
+  private final int interpolationAnd;
+
+  VoiceCounter(final int bitDepth) {
+    this.interpolationShift = 12 - bitDepth;
+    this.interpolationAnd = (1 << bitDepth) - 1;
+  }
+
   int getCurrentSampleIndex() {
     return (this.counter >> 12) & 0x1f;
   }
 
   int getInterpolationIndex() {
-    return this.counter >> 3 & 0x1ff;
+    return this.counter >> this.interpolationShift & this.interpolationAnd;
   }
 
   /** Adds value to the counter, returns true if the end of block was reached */

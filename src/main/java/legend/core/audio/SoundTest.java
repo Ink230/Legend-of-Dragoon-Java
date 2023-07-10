@@ -8,7 +8,7 @@ import static legend.game.Scus94491BpeSegment_8005.reverbConfigs_80059f7c;
 
 public final class SoundTest {
   public static void main(final String[] args) {
-    final AudioThread audioThread = new AudioThread(100, true, 24);
+    final AudioThread audioThread = new AudioThread(100, true, 24, 9);
     final BackgroundMusic bgm = SoundFactory.backgroundMusic(5820);
     audioThread.loadBackgroundMusic(bgm);
 
