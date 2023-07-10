@@ -14,7 +14,7 @@ final class Voice {
   private static final Logger LOGGER = LogManager.getFormatterLogger();
   private static final Marker VOICE_MARKER = MarkerManager.getMarker("VOICE");
 
-  protected static final short[] EMPTY = {0, 0, 0};
+  static final short[] EMPTY = {0, 0, 0};
   private final int index;
   private final LookupTables lookupTables;
 
@@ -52,16 +52,13 @@ final class Voice {
 
   private boolean hasSamples;
   private final short[] samples = new short[28 + EMPTY.length];
-  private final Voice previousVoice;
-  private short latestSample;
 
   private float outLeft;
   private float outRight;
 
-  Voice(final int index, final LookupTables lookupTables, final Voice previousVoice, final int interpolationBitDepth) {
+  Voice(final int index, final LookupTables lookupTables, final int interpolationBitDepth) {
     this.index = index;
     this.lookupTables = lookupTables;
-    this.previousVoice = previousVoice;
     this.counter = new VoiceCounter(interpolationBitDepth);
   }
 
@@ -79,8 +76,6 @@ final class Voice {
     final short sample = this.sampleVoice();
 
     final short adsrApplied = (short)((sample * this.adsrEnvelope.getCurrentLevel()) >> 15);
-
-    this.latestSample = adsrApplied;
 
     this.outLeft = (float)(adsrApplied * this.volumeLeft / 0x8000);
     this.outRight = (float)(adsrApplied * this.volumeRight / 0x8000);
@@ -117,20 +112,7 @@ final class Voice {
       + interpolationWeights[2] * this.samples[sampleIndex + 2]
       + interpolationWeights[3] * this.samples[sampleIndex + 3];
 
-    int step = this.sampleRate;
-
-    //TODO channelFmMode is set how?
-    if(this.index > 0 && false) {
-      final int factor = this.previousVoice.latestSample + 0x8000;
-      step = step * factor >> 15;
-      step &= 0xFFFF;
-    }
-
-    if(step > 0x3fff) {
-      step = 0x4000;
-    }
-
-    if(this.counter.add(step)) {
+    if(this.counter.add(this.sampleRate)) {
       this.hasSamples = false;
     }
 
@@ -291,8 +273,6 @@ final class Voice {
 
     this.highPriority = false;
     this._18 = false;
-
-    this.latestSample = 0;
   }
 
   boolean isLowPriority() {

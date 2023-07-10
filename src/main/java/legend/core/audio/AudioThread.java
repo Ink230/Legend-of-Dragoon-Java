@@ -92,10 +92,8 @@ public final class AudioThread implements Runnable {
 
     this.voices = new Voice[voiceCount];
 
-    this.voices[0] = new Voice(0, lookupTables, null, interpolationBitDepth);
-
-    for(int voice = 1; voice < this.voices.length; voice++) {
-      this.voices[voice] = new Voice(voice, lookupTables, this.voices[voice - 1], interpolationBitDepth);
+    for(int voice = 0; voice < this.voices.length; voice++) {
+      this.voices[voice] = new Voice(voice, lookupTables, interpolationBitDepth);
     }
 
     this.output = new BufferedSound(this.samplesPerTick, stereo);

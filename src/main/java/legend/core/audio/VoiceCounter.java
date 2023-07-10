@@ -1,7 +1,8 @@
 package legend.core.audio;
 
 final class VoiceCounter {
-  private final static int START_OFFSET = Voice.EMPTY.length << 12;
+  //TODO verify if this is actually correct for other values
+  private final static int START_OFFSET = ((Voice.EMPTY.length) / 2 + 1) << 12;
   private int counter = START_OFFSET;
 
   private final int interpolationShift;
