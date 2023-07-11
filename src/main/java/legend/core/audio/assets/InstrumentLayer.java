@@ -9,7 +9,7 @@ public final class InstrumentLayer {
   private final int keyRoot;
   /** Originally sixteenths. Increased for more accuracy during modulation */
   private final int sixtyFourths;
-  private final Pair<short[][], int[]> pcm;
+  private final byte[] soundBankEntry;
   private final AdsrPhase[] adsr;
   private final int lockedVolume;
   private final int volume;
@@ -31,7 +31,7 @@ public final class InstrumentLayer {
     this.keyRangeMaximum = data.readUByte(0x01);
     this.keyRoot = data.readUByte(0x02);
     this.sixtyFourths = data.readByte(0x03) * 4;
-    this.pcm = soundBank.getEntry(data.readUShort(0x04) * 8);
+    this.soundBankEntry = soundBank.getEntry(data.readUShort(0x04) * 8);
     this.adsr = AdsrPhase.getPhases(data.readUShort(0x06), data.readUShort(0x08));
     this.lockedVolume = data.readUByte(0x0A);
     this.volume = data.readUByte(0x0B);
@@ -60,8 +60,8 @@ public final class InstrumentLayer {
     return this.sixtyFourths;
   }
 
-  public Pair<short[][], int[]> getPcm() {
-    return this.pcm;
+  public byte[] getSoundBankEntry() {
+    return this.soundBankEntry;
   }
 
   public AdsrPhase[] getAdsr() {

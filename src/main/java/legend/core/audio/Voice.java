@@ -96,8 +96,6 @@ final class Voice {
 
   private short sampleVoice() {
     if(!this.hasSamples) {
-      System.arraycopy(this.samples, 28, this.samples, 0, EMPTY.length);
-
       this.soundBankEntry.loadSamples(this.samples);
 
       this.hasSamples = true;
@@ -223,7 +221,7 @@ final class Voice {
 
     this.counter.reset();
     this.adsrEnvelope.load(layer.getAdsr());
-    this.soundBankEntry.load(layer.getPcm());
+    this.soundBankEntry.load(layer.getSoundBankEntry());
 
     this.sampleRate = this.calculateSampleRate(this.layer.getKeyRoot(), note, this.layer.getSixtyFourths(), this.channel.getPitchBend(), this.pitchBendMultiplier);
     this.volumeLeft = this.calculateVolume(true);
