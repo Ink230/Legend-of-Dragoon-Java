@@ -134,8 +134,6 @@ public final class Scus94491BpeSegment_800b {
 
   public static final Value _800bd774 = MEMORY.ref(4, 0x800bd774L);
 
-  public static boolean melbuSoundsLoaded_800bd780;
-  public static boolean melbuMusicLoaded_800bd781;
   public static boolean musicLoaded_800bd782;
 
   public static final Value _800bd7ac = MEMORY.ref(4, 0x800bd7acL);
