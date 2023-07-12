@@ -256,7 +256,7 @@ final class Voice {
   }
 
   void clear() {
-    LOGGER.info(VOICE_MARKER, "Clearing Voice %d%", this.index);
+    LOGGER.info(VOICE_MARKER, "Clearing Voice %d", this.index);
 
     this.used = false;
     this.note = 0;

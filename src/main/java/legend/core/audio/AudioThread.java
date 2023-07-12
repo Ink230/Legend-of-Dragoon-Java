@@ -325,7 +325,7 @@ public final class AudioThread implements Runnable {
       case 0x0A -> this.musicPan(channelIndex, value);
       case 0x62 -> this.musicDataEntryLsb(value);
       case 0x63 -> this.musicDataEntryMsb(value);
-      default -> LOGGER.warn(SEQUENCER_MARKER, "Bad Control Change Channel: %d Command: 0x%x Value: 0x%x%n", channelIndex, control, value);
+      default -> LOGGER.warn(SEQUENCER_MARKER, "Bad Control Change Channel: %d Command: 0x%x Value: 0x%x", channelIndex, control, value);
     }
   }
 
@@ -437,13 +437,13 @@ public final class AudioThread implements Runnable {
   }
 
   private void musicDataEntryLsb(final int value) {
-    LOGGER.info(SEQUENCER_MARKER, "Data Entry LSB Value: 0x%x%", value);
+    LOGGER.info(SEQUENCER_MARKER, "Data Entry LSB Value: 0x%x", value);
 
     this.backgroundMusic.dataEntryLsb(value);
   }
 
   private void musicDataEntryMsb(final int command) {
-    LOGGER.info(SEQUENCER_MARKER, "Data Entry MSB Value: 0x%x%", command);
+    LOGGER.info(SEQUENCER_MARKER, "Data Entry MSB Value: 0x%x", command);
 
     this.backgroundMusic.dataEntryMsb(command);
   }
@@ -459,7 +459,7 @@ public final class AudioThread implements Runnable {
   }
 
   private void musicPitchBend(final int channelIndex, final int pitchBend) {
-    LOGGER.info(SEQUENCER_MARKER, "Pitch Bend Channel: %d, Pitch Bend: %d%", channelIndex, pitchBend);
+    LOGGER.info(SEQUENCER_MARKER, "Pitch Bend Channel: %d, Pitch Bend: %d", channelIndex, pitchBend);
 
     final Channel channel = this.backgroundMusic.getChannel(channelIndex);
     channel.setPitchBend(pitchBend);
@@ -474,7 +474,7 @@ public final class AudioThread implements Runnable {
   private void musicMeta(final int command, final int value) {
     switch(command) {
       case 0x51 -> {
-        LOGGER.info(SEQUENCER_MARKER, "Tempo change: %d%", value);
+        LOGGER.info(SEQUENCER_MARKER, "Tempo change: %d", value);
 
         this.backgroundMusic.setTempo(value);
       }
