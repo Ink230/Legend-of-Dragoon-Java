@@ -4,6 +4,8 @@ import static org.lwjgl.openal.AL10.AL_BUFFERS_PROCESSED;
 import static org.lwjgl.openal.AL10.AL_FORMAT_MONO16;
 import static org.lwjgl.openal.AL10.AL_FORMAT_STEREO16;
 import static org.lwjgl.openal.AL10.AL_GAIN;
+import static org.lwjgl.openal.AL10.AL_PAUSED;
+import static org.lwjgl.openal.AL10.AL_PLAYING;
 import static org.lwjgl.openal.AL10.AL_SOURCE_STATE;
 import static org.lwjgl.openal.AL10.AL_STOPPED;
 import static org.lwjgl.openal.AL10.alBufferData;
@@ -30,13 +32,15 @@ final class BufferedSound {
   private int bufferPosition;
   private final int format;
   private final int sourceId;
+  private final int sampleRate;
 
   private boolean playing;
 
-  BufferedSound(final int bufferSize, final boolean stereo) {
+  BufferedSound(final int bufferSize, final boolean stereo, final int sampleRate) {
     this.format = stereo ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
     this.bufferSize = bufferSize * (stereo ? 2 : 1);
     this.sampleBuffer = new short[this.bufferSize];
+    this.sampleRate = sampleRate;
 
     this.sourceId = alGenSources();
 
@@ -57,9 +61,9 @@ final class BufferedSound {
     }
   }
 
-  private void bufferSamples(final short[] pcm) {
+  void bufferSamples(final short[] pcm) {
     final int bufferId = this.buffers[this.bufferIndex++];
-    alBufferData(bufferId, this.format, pcm, 44_100);
+    alBufferData(bufferId, this.format, pcm, this.sampleRate);
     alSourceQueueBuffers(this.sourceId, bufferId);
     this.bufferIndex &= BUFFER_COUNT - 1;
   }
@@ -95,5 +99,11 @@ final class BufferedSound {
   void destroy() {
     alDeleteSources(this.sourceId);
     alDeleteBuffers(this.buffers);
+  }
+
+  boolean isPlaying() {
+    this.playing = alGetSourcei(this.sourceId, AL_SOURCE_STATE) == AL_PLAYING;
+
+    return this.playing;
   }
 }

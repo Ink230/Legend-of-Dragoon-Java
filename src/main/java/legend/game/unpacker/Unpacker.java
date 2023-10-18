@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
@@ -108,6 +109,9 @@ public final class Unpacker {
     transformers.put(Unpacker::playerScriptDamageCapsDiscriminator, Unpacker::playerScriptDamageCapsTransformer);
     transformers.put(Unpacker::enemyScriptDamageCapDiscriminator, Unpacker::enemyAndItemScriptDamageCapPatcher);
     transformers.put(Unpacker::itemScriptDamageCapDiscriminator, Unpacker::enemyAndItemScriptDamageCapPatcher);
+
+    // XA transcoding
+    transformers.put(Unpacker::xaDiscriminator, Unpacker::unXa);
   }
 
   private static Consumer<String> statusListener = status -> { };
@@ -1032,6 +1036,16 @@ public final class Unpacker {
     }
 
     return Map.of(name, data);
+  }
+
+  private static boolean xaDiscriminator(final String name, final FileData data, final Set<String> flags) {
+    return name.endsWith(".XA");
+  }
+
+  private static Map<String, FileData> unXa(final String name, final FileData data, final Set<String> flags) {
+    legend.game.unpacker.xa.Transformer.transcode(name, data);
+
+    return Collections.EMPTY_MAP;
   }
 
   private static void writeFiles(final Map<String, FileData> files) {

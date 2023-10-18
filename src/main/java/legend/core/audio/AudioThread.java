@@ -7,6 +7,7 @@ import legend.core.audio.assets.Channel;
 import legend.core.audio.assets.Instrument;
 import legend.core.audio.assets.InstrumentLayer;
 import legend.game.sound.ReverbConfig;
+import legend.game.unpacker.FileData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -32,6 +33,7 @@ public final class AudioThread implements Runnable {
   private final long audioContext;
   private final long audioDevice;
   private final int nanosPerTick;
+  private final int frequency;
   private final int samplesPerTick;
   private final boolean stereo;
   private final Voice[] voices;
@@ -49,6 +51,8 @@ public final class AudioThread implements Runnable {
   private final Reverberizer reverb = new Reverberizer();
   private float reverbVolumeLeft;
   private float reverbVolumeRight;
+
+  private OpusAudio xaSource;
 
   /**
    * @param frequency Amount of updates per second. Has to be a divisor of 1_000_000_000 and 44_100 (1, 2, 4, 5, 10, 20, 25, 50, 100).
@@ -68,8 +72,9 @@ public final class AudioThread implements Runnable {
       throw new IllegalArgumentException("Interpolation Bit Depth must be less or equal to 12");
     }
 
-    this.nanosPerTick = 1_000_000_000 / frequency;
-    this.samplesPerTick = 44_100 / frequency;
+    this.frequency = frequency;
+    this.nanosPerTick = 1_000_000_000 / this.frequency;
+    this.samplesPerTick = 44_100 / this.frequency;
 
     final String defaultDeviceName = alcGetString(0, ALC_DEFAULT_DEVICE_SPECIFIER);
     this.audioDevice = alcOpenDevice(defaultDeviceName);
@@ -96,7 +101,7 @@ public final class AudioThread implements Runnable {
       this.voices[voice] = new Voice(voice, lookupTables, interpolationBitDepth);
     }
 
-    this.output = new BufferedSound(this.samplesPerTick, stereo);
+    this.output = new BufferedSound(this.samplesPerTick, stereo, 44_100);
 
     this.setReverbConfig(reverbConfigs_80059f7c.get(2).config_02);
     this.setReverbVolume(0x30, 0x30);
@@ -119,6 +124,7 @@ public final class AudioThread implements Runnable {
       }
 
       this.output.processBuffers();
+      this.xaSource.processBuffers();
       this.tick();
 
       final long interval = System.nanoTime() - this.time;
@@ -128,6 +134,7 @@ public final class AudioThread implements Runnable {
 
       //Restart playback if the audio thread ever lags behind
       this.output.play();
+      this.xaSource.shouldPlay();
     }
 
     this.output.destroy();
@@ -170,6 +177,10 @@ public final class AudioThread implements Runnable {
       if(this.stereo) {
         this.output.bufferSample((short)(MathHelper.clamp(sumRight * 0x8000, -0x8000, 0x7fff)));
       }
+    }
+
+    if(this.xaSource != null) {
+      this.xaSource.tryBuffer();
     }
   }
 
@@ -490,6 +501,11 @@ public final class AudioThread implements Runnable {
   //TODO this needs to be made thread safe
   public void loadBackgroundMusic(final BackgroundMusic backgroundMusic) {
     this.backgroundMusic = backgroundMusic;
+  }
+
+  public OpusAudio loadXa(final FileData fileData) {
+    this.xaSource = new OpusAudio(fileData, this.frequency, true);
+    return this.xaSource;
   }
 
   private void setReverbConfig(final ReverbConfig config) {
