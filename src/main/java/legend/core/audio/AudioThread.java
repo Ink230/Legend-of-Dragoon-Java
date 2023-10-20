@@ -124,7 +124,9 @@ public final class AudioThread implements Runnable {
       }
 
       this.output.processBuffers();
-      this.xaSource.processBuffers();
+      if(this.xaSource != null) {
+        this.xaSource.processBuffers();
+      }
       this.tick();
 
       final long interval = System.nanoTime() - this.time;
@@ -134,7 +136,9 @@ public final class AudioThread implements Runnable {
 
       //Restart playback if the audio thread ever lags behind
       this.output.play();
-      this.xaSource.shouldPlay();
+      if(this.xaSource != null) {
+        this.xaSource.shouldPlay();
+      }
     }
 
     this.output.destroy();

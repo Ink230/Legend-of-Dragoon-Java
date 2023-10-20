@@ -52,6 +52,16 @@ public final class SoundFactory {
     return new BackgroundMusic(sssq, sshdParser.getBreathControls(), sshdParser.getVelocityRamp());
   }
 
+  public static SoundEffect soundEffect(final String path) {
+    final List<FileData> files = Unpacker.loadDirectory(path);
+
+    final SshdParser sshdParser = new SshdParser(files.get(2));
+
+    final Sssq sssq = new Sssq(sshdParser.subfiles.get(4), sshdParser.getBreathControls(), sshdParser.createSoundFont(files.get(3)));
+
+    return new SoundEffect(sssq, sshdParser.getBreathControls(), sshdParser.getVelocityRamp());
+  }
+
 
   private static class SshdParser {
     /**

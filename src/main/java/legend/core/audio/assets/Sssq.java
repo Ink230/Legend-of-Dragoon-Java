@@ -32,6 +32,21 @@ public final class Sssq {
     this.sequences[0] = data.slice(0x110, data.size() - 0x110).getBytes();
   }
 
+  /** SFX */
+  Sssq(final FileData data, final byte[][] sequences, final SoundFont soundFont) {
+    this.channels = new Channel[24];
+    for(int channel = 0; channel < this.channels.length; channel++) {
+      this.channels[channel] = new Channel(data.slice(16 + channel * 16, 16), soundFont);
+    }
+
+    this.sequences = sequences;
+
+    //TODO placeholders
+    this.volume = 64;
+    this.tempo = 0;
+    this.ticksPerQuarterNote = 0;
+  }
+
   int getVolume() {
     return this.volume;
   }
