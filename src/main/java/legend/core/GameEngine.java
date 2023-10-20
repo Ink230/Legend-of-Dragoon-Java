@@ -1,5 +1,6 @@
 package legend.core;
 
+import legend.core.audio.AudioThread;
 import legend.core.gpu.Gpu;
 import legend.core.memory.Memory;
 import legend.core.memory.Value;
@@ -93,9 +94,11 @@ public final class GameEngine {
   public static final Cpu CPU;
   public static final Gpu GPU;
   public static final Spu SPU;
+  public static final AudioThread AUDIO_THREAD;
 
   public static final Thread hardwareThread;
   public static final Thread spuThread;
+  public static final Thread openAlThread;
 
   public static boolean legacyUi;
 
@@ -118,11 +121,14 @@ public final class GameEngine {
     CPU = new Cpu();
     GPU = new Gpu();
     SPU = new Spu();
+    AUDIO_THREAD = new AudioThread(100, true, 24, 9);
 
     hardwareThread = Thread.currentThread();
     hardwareThread.setName("Hardware");
     spuThread = new Thread(SPU);
     spuThread.setName("SPU");
+    openAlThread = new Thread(AUDIO_THREAD);
+    openAlThread.setName("OPEN_AL");
   }
 
   private static final Value _80010000 = MEMORY.ref(4, 0x80010000L);
@@ -385,6 +391,7 @@ public final class GameEngine {
     }
 
     spuThread.start();
+    openAlThread.start();
 
     synchronized(LOCK) {
       Input.init();
