@@ -1,6 +1,4 @@
-package legend.core.audio.assets;
-
-import legend.core.MathHelper;
+package legend.core.audio.sequencer.assets;
 
 public final class AdsrPhase {
   private final int target;

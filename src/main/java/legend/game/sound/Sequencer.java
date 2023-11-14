@@ -208,7 +208,7 @@ public class Sequencer {
       return;
     }
 
-    instrumentLayerIndex_800c6678 += instrumentIndex;
+    instrumentLayerIndex_800c6678 = instrumentIndex;
     instrumentLayer_800c6678 = instrumentLayers_800c6678[instrumentLayerIndex_800c6678];
     sssqChannelInfo_800C6680.pitchBend_0a = 64;
 

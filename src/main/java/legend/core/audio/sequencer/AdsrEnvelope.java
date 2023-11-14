@@ -1,7 +1,7 @@
-package legend.core.audio;
+package legend.core.audio.sequencer;
 
 import legend.core.MathHelper;
-import legend.core.audio.assets.AdsrPhase;
+import legend.core.audio.sequencer.assets.AdsrPhase;
 
 final class AdsrEnvelope {
   private AdsrPhase[] phases;

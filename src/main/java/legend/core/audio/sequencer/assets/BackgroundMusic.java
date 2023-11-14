@@ -1,6 +1,6 @@
-package legend.core.audio.assets;
+package legend.core.audio.sequencer.assets;
 
-import legend.core.audio.MidiCommand;
+import legend.core.audio.sequencer.MidiCommand;
 import legend.game.unpacker.FileData;
 
 public final class BackgroundMusic {
@@ -12,8 +12,8 @@ public final class BackgroundMusic {
   private int sequencePosition;
   private int samplesToProcess;
 
-  private Command currentCommand;
-  private Command previousCommand;
+  private BgmCommand currentCommand;
+  private BgmCommand previousCommand;
 
   private int lsbType;
   private int nrpn;
@@ -21,7 +21,7 @@ public final class BackgroundMusic {
   private int repeatCount;
   private int repeatCounter;
   private int repeatPosition;
-  private Command repeatCommand;
+  private BgmCommand repeatCommand;
   private boolean repeat;
 
   BackgroundMusic(final Sssq sssq, final byte[][] breathControls, final byte[] velocityRamp) {
@@ -29,50 +29,69 @@ public final class BackgroundMusic {
     this.breathControls = breathControls;
     this.velocityRamp = velocityRamp;
 
-    this.sequence = new FileData(this.sssq.getSequence(0));
+    this.sequence = this.sssq.getSequence(0, 0);
   }
 
-  public Command getNextCommand() {
+  public BgmCommand getNextCommand() {
     this.previousCommand = this.currentCommand;
 
     final int event = this.sequence.readUByte(this.sequencePosition);
 
-    this.currentCommand = new Command();
+    this.currentCommand = new BgmCommand();
+
     if((event & 0x80) != 0) {
-      this.currentCommand.command = MidiCommand.formEvent(event);
-      this.currentCommand.channel = event & 0x0f;
+      this.currentCommand.setMidiCommand(MidiCommand.formEvent(event));
+      this.currentCommand.setChannel(event & 0x0f);
       this.sequencePosition++;
     } else {
-      this.currentCommand.command = this.previousCommand.command;
-      this.currentCommand.channel = this.previousCommand.channel;
+      this.currentCommand.setMidiCommand(this.previousCommand.getMidiCommand());
+      this.currentCommand.setChannel(this.previousCommand.getChannel());
     }
 
-    switch(this.currentCommand.command) {
+    switch(this.currentCommand.getMidiCommand()) {
       case KEY_OFF, KEY_ON, CONTROL_CHANGE -> {
-        this.currentCommand.value1 = this.sequence.readUByte(this.sequencePosition++);
-        this.currentCommand.value2 = this.sequence.readUByte(this.sequencePosition++);
+        this.currentCommand.setValue1(this.sequence.readUByte(this.sequencePosition++));
+        this.currentCommand.setValue2(this.sequence.readUByte(this.sequencePosition++));
       }
-      case PROGRAM_CHANGE, PITCH_BEND -> this.currentCommand.value1 = this.sequence.readUByte(this.sequencePosition++);
+      case PROGRAM_CHANGE, PITCH_BEND -> {
+        this.currentCommand.setValue1(this.sequence.readUByte(this.sequencePosition++));
+      }
       case META -> {
-        this.currentCommand.value1 = this.sequence.readUByte(this.sequencePosition++);
-        if(this.currentCommand.value1 == 0x51) {
-          this.currentCommand.value2 = this.sequence.readUShort(this.sequencePosition);
-          this.sequencePosition += 2;
+        this.currentCommand.setValue1(this.sequence.readUByte(this.sequencePosition++));
+
+        if(this.currentCommand.getValue1() == 0x51) {
+          this.currentCommand.setValue2(this.sequence.readUShort(this.sequencePosition));
+          this.sequencePosition +=2;
         }
       }
-      default -> throw new RuntimeException("Bad message: %s".formatted(this.currentCommand.command));
+      default -> throw new RuntimeException("Bad message: %s".formatted(this.currentCommand.getMidiCommand()));
     }
 
     if(this.repeat) {
       this.repeat = false;
       this.sequencePosition = this.repeatPosition;
       this.currentCommand = this.repeatCommand;
-      this.currentCommand.deltaTime = 0;
+      this.currentCommand.setDeltaTime(0);
       return this.currentCommand;
     }
 
-    this.currentCommand.deltaTime = this.readDeltaTime();
+    this.currentCommand.setDeltaTime(this.readDeltaTime());
     return this.currentCommand;
+  }
+
+  private int readDeltaTime() {
+    int deltaTime = 0;
+
+    while(true) {
+      final int part = this.sequence.readUByte(this.sequencePosition++);
+
+      deltaTime <<= 7;
+      deltaTime |= part & 0x7f;
+
+      if((part & 0x80) == 0) {
+        return deltaTime;
+      }
+    }
   }
 
   public int getSamplesToProcess() {
@@ -93,25 +112,20 @@ public final class BackgroundMusic {
     this.samplesToProcess--;
   }
 
-  private int readDeltaTime() {
-    int deltaTime = 0;
-
-    while(true) {
-      final int part = this.sequence.readUByte(this.sequencePosition++);
-
-      deltaTime <<= 7;
-      deltaTime |= part & 0x7f;
-
-      if((part & 0x80) == 0) {
-        break;
-      }
-    }
-
-    return deltaTime;
-  }
-
   public Channel getChannel(final int channelIndex) {
     return this.sssq.getChannel(channelIndex);
+  }
+
+  public int getNrpn() {
+    return this.nrpn;
+  }
+
+  public void setRepeatCount(final int repeatCount) {
+    this.repeatCount = repeatCount;
+  }
+
+  public int getVolume() {
+    return this.sssq.getVolume();
   }
 
   public int getVelocity(final int velocityIndex) {
@@ -124,10 +138,6 @@ public final class BackgroundMusic {
 
   public void setTempo(final int tempo) {
     this.sssq.setTempo(tempo);
-  }
-
-  public int getVolume() {
-    return this.sssq.getVolume();
   }
 
   public void dataEntryLsb(final int value) {
@@ -167,42 +177,6 @@ public final class BackgroundMusic {
     } else if(nrpn == 0x7f) {
       this.lsbType = 0;
       this.dataInstrumentIndex = 0xff;
-    }
-  }
-
-  public int getNrpn() {
-    return this.nrpn;
-  }
-
-  public void setRepeatCount(final int repeatCount) {
-    this.repeatCount = repeatCount;
-  }
-
-  public final class Command {
-    private MidiCommand command;
-    private int channel;
-    private int value1;
-    private int value2;
-    private int deltaTime;
-
-    public MidiCommand getMidiCommand() {
-      return this.command;
-    }
-
-    public int getChannel() {
-      return this.channel;
-    }
-
-    public int getValue1() {
-      return this.value1;
-    }
-
-    public int getValue2() {
-      return this.value2;
-    }
-
-    public int getDeltaTime() {
-      return this.deltaTime;
     }
   }
 }

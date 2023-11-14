@@ -1,6 +1,5 @@
-package legend.core.audio.assets;
+package legend.core.audio.sequencer.assets;
 
-import it.unimi.dsi.fastutil.Pair;
 import legend.game.unpacker.FileData;
 
 public final class InstrumentLayer {
@@ -112,3 +111,4 @@ public final class InstrumentLayer {
     return this.reverb;
   }
 }
+

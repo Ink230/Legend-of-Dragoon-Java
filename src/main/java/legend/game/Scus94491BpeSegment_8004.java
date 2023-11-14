@@ -50,6 +50,7 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.function.Function;
 
+import static legend.core.GameEngine.AUDIO_THREAD;
 import static legend.core.GameEngine.CPU;
 import static legend.core.GameEngine.MEMORY;
 import static legend.core.GameEngine.SEQUENCER;
@@ -1425,6 +1426,10 @@ public final class Scus94491BpeSegment_8004 {
 
   @Method(0x8004c390L)
   public static long freeSequence(final SequenceData124 sequenceData) {
+    if(sequenceData == null) {
+      return 0;
+    }
+
     if(sequenceData.musicPlaying_028) {
       assert false : "Error";
       return -0x1L;
@@ -1664,6 +1669,8 @@ public final class Scus94491BpeSegment_8004 {
 
   @Method(0x8004cf8cL)
   public static void startMusicSequence(final SequenceData124 sequenceData) {
+  //TODO this is called for stuff like post battle music
+/*
     final PlayableSound0c playableSound = sequenceData.playableSound_020;
 
     sshdPtr_800c4ac0 = playableSound.sshdPtr_04;
@@ -1679,10 +1686,17 @@ public final class Scus94491BpeSegment_8004 {
 
     //LAB_8004d02c
     sequenceData._018 = false;
+ */
   }
 
   @Method(0x8004d034L)
   public static void stopMusicSequence(final SequenceData124 sequenceData, final int a1) {
+    //TODO also for post battle music and some other stuff. Will need more AUDIO_THREAD handeling
+    if(true) {
+      AUDIO_THREAD.unloadMusic();
+      return;
+    }
+
     boolean resetAdsr = false;
     final PlayableSound0c playableSound = sequenceData.playableSound_020;
     final Sshd sshd = playableSound.sshdPtr_04;
@@ -1810,6 +1824,10 @@ public final class Scus94491BpeSegment_8004 {
 
   @Method(0x8004d41cL)
   public static int changeSequenceVolumeOverTime(final SequenceData124 sequenceData, final int transitionTime, final int newVolume) {
+    if(sequenceData == null) {
+      return 0x40;
+    }
+
     assert (short)transitionTime >= 0;
     assert (short)newVolume >= 0;
 

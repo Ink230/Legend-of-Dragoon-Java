@@ -1,9 +1,7 @@
-package legend.core.audio.assets;
+package legend.core.audio.sequencer.assets;
 
-import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
-import legend.core.MathHelper;
 import legend.game.unpacker.FileData;
 
 final class SoundBank {
@@ -51,3 +49,4 @@ final class SoundBank {
     return offsets;
   }
 }
+

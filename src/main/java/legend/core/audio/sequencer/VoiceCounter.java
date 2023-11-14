@@ -1,4 +1,4 @@
-package legend.core.audio;
+package legend.core.audio.sequencer;
 
 final class VoiceCounter {
   //TODO verify if this is actually correct for other values

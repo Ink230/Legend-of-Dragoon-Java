@@ -1,4 +1,4 @@
-package legend.core.audio.assets;
+package legend.core.audio.sequencer.assets;
 
 import legend.game.unpacker.FileData;
 
@@ -90,3 +90,4 @@ public final class Instrument {
     }
   }
 }
+

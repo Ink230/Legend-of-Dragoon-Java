@@ -1,18 +1,18 @@
-package legend.core.audio;
+package legend.core.audio.sequencer;
 
 import legend.core.MathHelper;
 import legend.core.spu.Reverb;
 import legend.game.sound.ReverbConfig;
 
-public class Reverberizer {
+final class Reverberizer {
   private final Reverb reverb = new Reverb();
-  private final float[] reverbWorkArea = new float[0x4_0000];
+  private final float[] reverbWorkArea = new float[0x40_000];
   private int reverbCurrentAddress;
 
   private float outputLeft;
   private float outputRight;
 
-  public void processReverb(final float lInput, final float rInput) {
+  void processReverb(final float lInput, final float rInput) {
     final int dAPF1 = this.reverb.dAPF1;
     final int dAPF2 = this.reverb.dAPF2;
     final float vIIR = this.reverb.vIIR;
@@ -95,7 +95,7 @@ public class Reverberizer {
     this.outputRight = r;
   }
 
-  public float saturateSample(final float sample) {
+  private float saturateSample(final float sample) {
     return MathHelper.clamp(sample, -1.0f, 1.0f);
   }
 
@@ -109,15 +109,15 @@ public class Reverberizer {
     return this.reverbWorkArea[address];
   }
 
-  public void setConfig(final ReverbConfig config) {
+  void setConfig(final ReverbConfig config) {
     this.reverb.set(config);
   }
 
-  public float getOutputLeft() {
+  float getOutputLeft() {
     return this.outputLeft;
   }
 
-  public float getOutputRight() {
+  float getOutputRight() {
     return this.outputRight;
   }
 }

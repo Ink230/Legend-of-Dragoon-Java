@@ -1,4 +1,4 @@
-package legend.core.audio;
+package legend.core.audio.sequencer;
 
 public enum MidiCommand {
   KEY_OFF(0x80),

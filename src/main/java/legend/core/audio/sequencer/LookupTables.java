@@ -1,4 +1,4 @@
-package legend.core.audio;
+package legend.core.audio.sequencer;
 
 final class LookupTables {
   private static final int BASE_SAMPLE_RATE = 0x1000;
@@ -88,3 +88,4 @@ final class LookupTables {
     return this.panMergeTable[pan1 + pan2];
   }
 }
+

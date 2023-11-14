@@ -259,7 +259,7 @@ public final class Scus94491BpeSegment_8002 {
 
     if(encounterSoundEffects._00 != 0) {
       stopMusicSequence(encounterSoundEffects.sequenceData_0c, 1);
-      freeSequence(encounterSoundEffects.sequenceData_0c);
+       freeSequence(encounterSoundEffects.sequenceData_0c);
       encounterSoundEffects.sssq_08 = null;
       encounterSoundEffects._00 = 0;
     }
@@ -4935,9 +4935,6 @@ public final class Scus94491BpeSegment_8002 {
 
       //LAB_8002c448
       AUDIO_THREAD.loadXa(Unpacker.loadFile("XA\\LODXA0" + xaArchiveIndex + ".XA\\" + xaFileIndex + ".opus")).play();
-
-//      new Thread(() -> Fmv.playXa(xaArchiveIndex, xaFileIndex)).start();
-//      final CdlLOC pos = CdlFILE_800bb4c8.get((int)MEMORY.ref(2, v1).offset(xaArchiveIndex * 0x8L).getSigned()).pos;
 
 //      CDROM.playXaAudio(pos, 1, xaFileIndex, () -> _800bf0cf.setu(0));
       _800bf0cf.setu(4);

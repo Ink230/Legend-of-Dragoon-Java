@@ -1,4 +1,4 @@
-package legend.core.audio.assets;
+package legend.core.audio.sequencer.assets;
 
 import legend.game.unpacker.FileData;
 
@@ -9,7 +9,7 @@ public final class Channel {
   private int pan;
   private int modulation;
   private int pitchBend;
-  private int _0b;
+  private int priority;
   private int breath;
   private int adjustedVolume;
 
@@ -30,7 +30,7 @@ public final class Channel {
 
     this.modulation = data.readUByte(0x09);
     this.pitchBend = data.readUByte(0x0a);
-    this._0b = data.readUByte(0x0b);
+    this.priority = data.readUByte(0x0b);
     this.breath = data.readUByte(0x0c);
 
     this.adjustedVolume = data.readUByte(0x0e);
@@ -53,47 +53,47 @@ public final class Channel {
     this.adjustedVolume = (volume * sssqVolume) / 0x80;
   }
 
-  public void setVolume(final int value) {
-    this.volume = value;
+  public void setVolume(final int volume) {
+    this.volume = volume;
   }
 
   public int getPan() {
     return this.pan;
   }
 
-  public void setPan(final int value) {
-    this.pan = value;
+  public void setPan(final int pan) {
+    this.pan = pan;
   }
 
   public int getModulation() {
     return this.modulation;
   }
 
-  public void setModulation(final int value) {
-    this.modulation = value;
+  public void setModulation(final int modulation) {
+    this.modulation = modulation;
   }
 
   public int getPitchBend() {
     return this.pitchBend;
   }
 
-  public void setPitchBend(final int value) {
-    this.pitchBend = value;
+  public void setPitchBend(final int pitchBend) {
+    this.pitchBend = pitchBend;
   }
 
-  public int get_0b() {
-    return this._0b;
+  public int getPriority() {
+    return this.priority;
   }
-  public void set_0b(final int value) {
-    this._0b = value;
+  public void setPriority(final int priority) {
+    this.priority = priority;
   }
 
   public int getBreath() {
     return this.breath;
   }
 
-  public void setBreath(final int value) {
-    this.breath = value;
+  public void setBreath(final int breath) {
+    this.breath = breath;
   }
 
 
@@ -102,8 +102,9 @@ public final class Channel {
     return this.adjustedVolume;
   }
 
-  public void setAdjustedVolume(final int value) {
-    this.adjustedVolume = value;
+  public void setAdjustedVolume(final int adjustedVolume) {
+    this.adjustedVolume = adjustedVolume;
   }
 
 }
+

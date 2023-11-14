@@ -1,31 +1,33 @@
 package legend.core.audio;
 
 import legend.core.DebugHelper;
-import legend.core.audio.assets.BackgroundMusic;
-import legend.core.audio.assets.SoundEffect;
-import legend.core.audio.assets.SoundFactory;
+import legend.core.audio.sequencer.assets.BackgroundMusic;
+import legend.core.audio.sequencer.assets.SoundFactory;
 import legend.game.unpacker.Unpacker;
 
 public final class SoundTest {
+  private SoundTest() {}
+
   public static void main(final String[] args) {
     final AudioThread audioThread = new AudioThread(100, true, 24, 9);
-    final BackgroundMusic bgm = SoundFactory.backgroundMusic(702);
-    audioThread.loadBackgroundMusic(bgm);
-
-    final OpusAudio audio = audioThread.loadXa(Unpacker.loadFile("XA\\LODXA00.XA\\4.opus"));
-
-    //final SoundEffect sfx = SoundFactory.soundEffect("characters\\dart\\sounds\\combat");
 
     final Thread spuThread = new Thread(audioThread);
     spuThread.setName("SPU");
 
     spuThread.start();
 
-    DebugHelper.sleep(10000);
+    final int fileIndex = 5820;
 
-    audio.play();
+    final BackgroundMusic bgm = SoundFactory.backgroundMusic(Unpacker.loadDirectory("SECT/DRGN0.BIN/" + fileIndex), fileIndex);
 
-    DebugHelper.sleep(100000);
+    audioThread.loadBackgroundMusic(bgm);
+
+//    DebugHelper.sleep(2000);
+
+    //This somehow causes popping, seems to work fine in game
+    audioThread.loadXa(Unpacker.loadFile("XA\\LODXA03.XA\\1.opus")).play();
+
+    DebugHelper.sleep(1000000);
 
     audioThread.stop();
   }
