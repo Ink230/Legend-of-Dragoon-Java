@@ -1,5 +1,6 @@
 package legend.core.audio.sequencer;
 
+import legend.core.audio.Fading;
 import legend.core.audio.sequencer.assets.BackgroundMusic;
 import legend.core.audio.sequencer.assets.BgmCommand;
 import legend.core.audio.sequencer.assets.Channel;
@@ -55,6 +56,14 @@ public final class Sequencer {
   private final Queue<BackgroundMusic> backgroundMusicQueue = new LinkedList<>();
   private final Lock bgmLock = new ReentrantLock();
   private boolean unload;
+  private float mainVolumeLeft;
+  private float mainVolumeRight;
+  private Fading fading = Fading.NONE;
+  private int fadeInVolume;
+  private int fadeOutVolumeLeft;
+  private int fadeOutVolumeRight;
+  private int fadeTime;
+  private int fadeCounter;
 
   public Sequencer(final int frequency, final boolean stereo, final int voiceCount, final int interpolationBitDepth) {
     if(44_100 % frequency != 0) {
@@ -97,6 +106,8 @@ public final class Sequencer {
       float sumReverbLeft = 0.0f;
       float sumReverbRight = 0.0f;
 
+      this.handleFadeInOut();
+
       for(final Voice voice : this.voices) {
         voice.tick(this.voiceOutputBuffer);
 
@@ -113,6 +124,9 @@ public final class Sequencer {
 
       this.outputBuffer[sample] += (short)((this.reverb.getOutputLeft() * this.reverbVolumeLeft) * 0x8000);
       this.outputBuffer[sample + 1] += (short)((this.reverb.getOutputRight() * this.reverbVolumeRight) * 0x8000);
+
+      this.outputBuffer[sample] *= this.mainVolumeLeft;
+      this.outputBuffer[sample + 1] *= this.mainVolumeRight;
     }
 
     this.bufferOutput();
@@ -490,5 +504,49 @@ public final class Sequencer {
 
   public void unloadMusic() {
     this.unload = true;
+  }
+
+  public void setMainVolume(final int left, final int right) {
+    this.mainVolumeLeft = left >= 0x80 ? 1 : left / 254f;
+
+    this.mainVolumeRight = right >= 0x80 ? 1 : right / 254f;
+  }
+
+  private void handleFadeInOut() {
+    if(this.fadeTime == 0) {
+      return;
+    }
+
+    switch(this.fading) {
+      case FADE_IN -> {
+        final int volume = (this.fadeInVolume * this.fadeCounter) / this.fadeTime;
+        this.fadeCounter++;
+        this.setMainVolume(volume, volume);
+      }
+      case FADE_OUT -> {
+        final int volumeLeft = (this.fadeOutVolumeLeft * (this.fadeTime - this.fadeCounter)) / this.fadeTime;
+        final int volumeRight = (this.fadeOutVolumeRight * (this.fadeTime - this.fadeCounter)) / this.fadeTime;
+        this.fadeCounter++;
+        this.setMainVolume(volumeLeft, volumeRight);
+      }
+    }
+
+    if(this.fadeCounter > this.fadeTime) {
+      this.fading = Fading.NONE;
+      this.fadeCounter = 0;
+    }
+  }
+
+  public void fadeIn(final int time, final int volume) {
+    this.fadeTime = time;
+    this.fadeInVolume = volume;
+    this.fading = Fading.FADE_IN;
+  }
+
+  public void fadeOut(final int time) {
+    this.fadeTime = time;
+    this.fadeOutVolumeLeft = (int)(this.mainVolumeLeft * 0x7e);
+    this.fadeOutVolumeRight = (int)(this.mainVolumeRight * 0x7e);
+    this.fading = Fading.FADE_OUT;
   }
 }

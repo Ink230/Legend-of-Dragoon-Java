@@ -1614,6 +1614,7 @@ public final class Scus94491BpeSegment {
   @Method(0x80019610L)
   public static void reinitSound() {
     setMainVolume(0, 0);
+    AUDIO_THREAD.setMainVolume(0, 0);
     setMaxSounds(8);
     sssqSetReverbType(3);
     sssqSetReverbVolume(0x30, 0x30);
@@ -1652,6 +1653,7 @@ public final class Scus94491BpeSegment {
     switch(engineState_8004dd20) {
       case TITLE_02 -> {
         setMainVolume(0x7f, 0x7f);
+        AUDIO_THREAD.setMainVolume(0x7f, 0x7f);
         sssqResetStuff();
         FUN_8001aa90();
 
@@ -2163,6 +2165,7 @@ public final class Scus94491BpeSegment {
   @Method(0x8001b14cL)
   public static FlowControl scriptSetMainVolume(final RunningScript<?> script) {
     setMainVolume((short)script.params_20[0].get(), (short)script.params_20[1].get());
+    AUDIO_THREAD.setMainVolume((short)script.params_20[0].get(), (short)script.params_20[1].get());
     return FlowControl.CONTINUE;
   }
 

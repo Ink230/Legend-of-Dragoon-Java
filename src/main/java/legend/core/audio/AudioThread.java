@@ -133,4 +133,18 @@ public final class AudioThread implements Runnable {
     this.xaSource = new BufferedAudio(data, 48_000 / this.frequency);
     return this.xaSource;
   }
+
+  public synchronized void setMainVolume(final int left, final int right) {
+    this.sequencer.setMainVolume(left, right);
+
+    //TODO XA playback??
+  }
+
+  public synchronized void fadeIn(final int time, final int volume) {
+    this.sequencer.fadeIn(time, volume);
+  }
+
+  public synchronized void fadeOut(final int time) {
+    this.sequencer.fadeOut(time);
+  }
 }

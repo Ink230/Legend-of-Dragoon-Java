@@ -80,8 +80,11 @@ public final class BufferedAudio {
     }
 
     if(this.end && alGetSourcei(this.sourceId, AL_SOURCE_STATE) != AL_PLAYING) {
-      this.destroy();
       this.end = false;
+      this.playing = false;
+      this.destroy();
+
+      return;
     }
 
     this.processBuffers();

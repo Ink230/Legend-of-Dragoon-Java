@@ -1650,6 +1650,8 @@ public final class Scus94491BpeSegment_8004 {
 
     //LAB_8004cd30
     //LAB_8004cd34
+
+    AUDIO_THREAD.fadeIn(fadeTime, maxVol);
     return 0;
   }
 
@@ -1660,6 +1662,8 @@ public final class Scus94491BpeSegment_8004 {
       soundEnv_800c6630.fadeTime_2c = fadeTime;
       soundEnv_800c6630.fadeOutVolL_30 = SPU.getMainVolumeLeft() >>> 8;
       soundEnv_800c6630.fadeOutVolR_32 = SPU.getMainVolumeRight() >>> 8;
+
+      AUDIO_THREAD.fadeOut(fadeTime);
       return 0;
     }
 
