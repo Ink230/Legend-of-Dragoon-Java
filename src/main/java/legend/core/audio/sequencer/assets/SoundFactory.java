@@ -45,6 +45,6 @@ public final class SoundFactory {
       default -> throw new UnpackerException("Uknwonw Sequenced Audio type. File count: " + files.size());
     }
 
-    return new BackgroundMusic(sssq, sshdParser.getBreathControls(), sshdParser.getVelocityRamp());
+    return new BackgroundMusic(files.get(0).readUShort(0), sssq, sshdParser.getBreathControls(), sshdParser.getVelocityRamp());
   }
 }

@@ -2245,12 +2245,16 @@ public final class Scus94491BpeSegment {
 
   @Method(0x8001b3e4L)
   public static int FUN_8001b3e4() {
+    return AUDIO_THREAD.getSongId();
+
+    /*
     if(soundFiles_800bcf80[11].used_00) {
       return soundFiles_800bcf80[11].charId_02;
     }
 
     //LAB_8001b408
     return -1;
+     */
   }
 
   @Method(0x8001b410L)
@@ -2527,7 +2531,7 @@ public final class Scus94491BpeSegment {
     }
 
     //LAB_8001c7ec
-    if(!currentSequenceData_800bd0f8.musicPlaying_028) {
+    if(currentSequenceData_800bd0f8 != null && !currentSequenceData_800bd0f8.musicPlaying_028) {
       return -2;
     }
 

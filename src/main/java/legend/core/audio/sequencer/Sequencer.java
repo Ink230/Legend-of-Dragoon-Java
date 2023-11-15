@@ -549,4 +549,12 @@ public final class Sequencer {
     this.fadeOutVolumeRight = (int)(this.mainVolumeRight * 0x7e);
     this.fading = Fading.FADE_OUT;
   }
+
+  public int getSongId() {
+    if(this.backgroundMusic == null) {
+      return -1;
+    }
+
+    return this.backgroundMusic.getSongId();
+  }
 }

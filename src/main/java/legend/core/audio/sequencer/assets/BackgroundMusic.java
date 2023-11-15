@@ -4,6 +4,7 @@ import legend.core.audio.sequencer.MidiCommand;
 import legend.game.unpacker.FileData;
 
 public final class BackgroundMusic {
+  private final int songId;
   private final Sssq sssq;
   private final byte[][] breathControls;
   private final byte[] velocityRamp;
@@ -24,7 +25,8 @@ public final class BackgroundMusic {
   private BgmCommand repeatCommand;
   private boolean repeat;
 
-  BackgroundMusic(final Sssq sssq, final byte[][] breathControls, final byte[] velocityRamp) {
+  BackgroundMusic(final int songId, final Sssq sssq, final byte[][] breathControls, final byte[] velocityRamp) {
+    this.songId = songId;
     this.sssq = sssq;
     this.breathControls = breathControls;
     this.velocityRamp = velocityRamp;
@@ -178,5 +180,9 @@ public final class BackgroundMusic {
       this.lsbType = 0;
       this.dataInstrumentIndex = 0xff;
     }
+  }
+
+  public int getSongId() {
+    return this.songId;
   }
 }

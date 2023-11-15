@@ -147,4 +147,8 @@ public final class AudioThread implements Runnable {
   public synchronized void fadeOut(final int time) {
     this.sequencer.fadeOut(time);
   }
+
+  public synchronized int getSongId() {
+    return this.sequencer.getSongId();
+  }
 }
