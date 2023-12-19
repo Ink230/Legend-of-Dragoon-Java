@@ -55,10 +55,10 @@ final class LookupTables {
       final float pow3 = pow2 * pow1;
 
       this.interpolationWeights[i] = new float[] {
-        0.5f * (-pow3 + 2 * pow2 - pow1),
-        0.5f * (3 * pow3 - 5 * pow2 + 2),
-        0.5f * (-3 * pow3 + 4 * pow2 + pow1),
-        0.5f * (pow3 - pow2)
+        0.45f * (-pow3 + 2 * pow2 - pow1),
+        0.45f * (3 * pow3 - 5 * pow2 + 2),
+        0.45f * (-3 * pow3 + 4 * pow2 + pow1),
+        0.45f * (pow3 - pow2)
       };
     }
   }

@@ -2591,7 +2591,7 @@ public final class Scus94491BpeSegment {
       } else {
         //LAB_8001da58
         fileIndex = combatMusicFileIndices_800501bc[stageData.musicIndex_04 & 0x1f];
-        callback = files -> FUN_8001fb44(files, "Encounter music %d (file %d)".formatted(stageData.musicIndex_04 & 0x1f, fileIndex), 0);
+        callback = files -> loadEncounterMusic(files, "Encounter music %d (file %d)".formatted(stageData.musicIndex_04 & 0x1f, fileIndex), 0);
       }
 
       //LAB_8001daa4
@@ -3245,7 +3245,7 @@ public final class Scus94491BpeSegment {
   }
 
   @Method(0x8001fb44L)
-  public static void FUN_8001fb44(final List<FileData> files, final String soundName, final int param) {
+  public static void loadEncounterMusic(final List<FileData> files, final String soundName, final int param) {
     final SoundFile sound = soundFiles_800bcf80[11];
     sound.name = soundName;
     sound.used_00 = true;

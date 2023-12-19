@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
@@ -120,6 +121,9 @@ public final class Unpacker {
 
     // Extract a bunch of TIMs
     transformers.put(Unpacker::lodEngineDiscriminator, Unpacker::lodEngineExtractor);
+
+    // XA transcoding
+    transformers.put(Unpacker::xaDiscriminator, Unpacker::unXa);
   }
 
   private static Consumer<String> statusListener = status -> { };
@@ -1119,6 +1123,16 @@ public final class Unpacker {
       "shadow.tim", getTimSize(data.slice(0x544)),
       "font.tim", getTimSize(data.slice(0xb6744))
     );
+  }
+
+  private static boolean xaDiscriminator(final String name, final FileData data, final Set<String> flags) {
+    return name.endsWith(".XA");
+  }
+
+  private static Map<String, FileData> unXa(final String name, final FileData data, final Set<String> flags) {
+    legend.game.unpacker.xa.Transformer.transcode(name, data);
+
+    return Collections.EMPTY_MAP;
   }
 
   private static FileData getTimSize(final FileData data) {

@@ -1,8 +1,10 @@
 package legend.core.audio;
 
 import legend.core.DebugHelper;
+import legend.core.audio.opus.BufferedAudio;
 import legend.core.audio.sequencer.Sequencer;
 import legend.core.audio.sequencer.assets.BackgroundMusic;
+import legend.game.unpacker.FileData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -30,6 +32,7 @@ public final class AudioThread implements Runnable {
   private final int frequency;
   private final boolean stereo;
   private final Sequencer sequencer;
+  private BufferedAudio xaSource;
 
   private long time;
   private boolean running;
@@ -86,6 +89,10 @@ public final class AudioThread implements Runnable {
 
       this.sequencer.tick();
 
+      if(this.xaSource != null) {
+        this.xaSource.tick();
+      }
+
       final long interval = System.nanoTime() - this.time;
       final int toSleep = (int)(Math.max(0, this.nanosPerTick - interval) / 1_000_000);
       DebugHelper.sleep(toSleep);
@@ -105,5 +112,15 @@ public final class AudioThread implements Runnable {
 
   public synchronized void loadBackgroundMusic(final BackgroundMusic backgroundMusic) {
     this.sequencer.loadBackgroundMusic(backgroundMusic);
+  }
+
+  // TODO not thread safe
+  public synchronized BufferedAudio loadXa(final FileData data) {
+    if(this.xaSource != null) {
+      this.xaSource.destroy();
+    }
+
+    this.xaSource = new BufferedAudio(data, 48_000 / this.frequency);
+    return this.xaSource;
   }
 }

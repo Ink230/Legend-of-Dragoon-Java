@@ -129,9 +129,6 @@ public final class Sequencer {
       int left = 0;
       int right = 0;
 
-      this.outputBuffer[sample] = 0;
-      this.outputBuffer[sample + 1] = 0;
-
       this.reverbOutputBuffer[0] = 0.0f;
       this.reverbOutputBuffer[1] = 0.0f;
 
