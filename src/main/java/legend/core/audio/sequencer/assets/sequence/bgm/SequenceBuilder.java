@@ -11,8 +11,8 @@ public final class SequenceBuilder {
   private int position;
   private int currentEvent;
   private int previousEvent;
-  final FileData data;
-  final Channel[] channels;
+  private final FileData data;
+  private final Channel[] channels;
   private SequenceBuilder(final FileData data, final Channel[] channels) {
     this.data = data;
     this.channels = channels;
