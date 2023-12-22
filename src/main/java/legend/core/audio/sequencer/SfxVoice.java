@@ -53,8 +53,8 @@ final class SfxVoice {
   private int priorityOrder;
   private VoicePriority priority;
 
-  private float volumeLeft;
-  private float volumeRight;
+  private float volumeLeft = 1.0f;
+  private float volumeRight = 1.0f;
 
   private boolean hasSamples;
   private final short[] samples = new short[28 + EMPTY.length];
@@ -160,14 +160,37 @@ final class SfxVoice {
     this.velocityVolume = velocityVolume;
     this.breathControls = breathControls;
 
+    this.counter.reset();
+    this.adsrEnvelope.load(this.layer.getAdsr());
+    this.soundBankEntry.load(this.layer.getSoundBankEntry());
 
+    this.sampleRate = this.calculateSampleRate(this.layer.getKeyRoot(), note, this.layer.getSixtyFourths(), this.channel.getPitchBend(), this.pitchBendMultiplier);
 
 
     this.used = true;
+    this.hasSamples = false;
+    System.arraycopy(EMPTY, 0, this.samples, 28, EMPTY.length);
   }
 
   void portamento() {
 
+  }
+
+  void clear() {
+    LOGGER.info(VOICE_MARKER, "Clearing Voice %d", this.index);
+
+    this.used = false;
+    this.note = 0;
+    this.channel = null;
+    this.layer = null;
+    this.instrument = null;
+    this.isModulation = false;
+    this.modulation = 0;
+    this.breath = 0;
+    this.breathControlIndex = 0;
+    this.breathControlPosition = 0;
+    this.priority = VoicePriority.Low;
+    System.arraycopy(EMPTY, 0, this.samples, 28, EMPTY.length);
   }
 
 

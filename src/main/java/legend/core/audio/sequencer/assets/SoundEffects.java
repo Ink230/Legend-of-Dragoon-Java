@@ -59,4 +59,11 @@ public final class SoundEffects {
     return this.velocityRamp[velocity];
   }
 
+  public Command getNextCommand() {
+    return this.seqences[2][this.sequencePosition++];
+  }
+
+  public int getSamplesPerTick() {
+    return 10;
+  }
 }

@@ -39,7 +39,7 @@ public final class Instrument {
     final List<InstrumentLayer> layers = new ArrayList<>();
 
     if(this.type == Type.SFX) {
-      layers.add(this.layers[this.startingNote - note]);
+      layers.add(this.layers[note - this.startingNote]);
       return layers;
     }
 
