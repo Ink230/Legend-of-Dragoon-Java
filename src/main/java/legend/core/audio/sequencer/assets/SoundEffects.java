@@ -10,6 +10,8 @@ public final class SoundEffects {
   private final int effectId;
 
   private final int volume;
+  private final int tickPerQuarterNote = 480;
+  private double samplesPerTick;
 
 
   private final byte[][] breathControls = new byte[0][];
@@ -31,6 +33,8 @@ public final class SoundEffects {
     final SoundFont soundFont = new SoundFont(sshd.slice(0x190 + sssqishOffset), soundBank);
 
     this.volume = sshd.readUByte(sssqishOffset);
+
+    this.setTempo(60);
 
     final Channel[] channels = new Channel[24];
     for(int channel = 0; channel < channels.length; channel++) {
@@ -63,7 +67,11 @@ public final class SoundEffects {
     return this.seqences[2][this.sequencePosition++];
   }
 
-  public int getSamplesPerTick() {
-    return 10;
+  public double getSamplesPerTick() {
+    return this.samplesPerTick;
+  }
+
+  public void setTempo(final int tempo) {
+    this.samplesPerTick = 2_646_000d / (tempo * this.tickPerQuarterNote);
   }
 }

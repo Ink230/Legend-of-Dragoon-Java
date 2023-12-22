@@ -172,8 +172,11 @@ final class SfxVoice {
     System.arraycopy(EMPTY, 0, this.samples, 28, EMPTY.length);
   }
 
-  void portamento() {
-
+  void portamento(final int newPortamento, final int portamentoTime) {
+    this.isPortamento = true;
+    this.newPortamento = newPortamento;
+    this.portamentoTicksTotal = portamentoTime * 4 * 60;
+    this.portamentoTicksRemaining = this.portamentoTicksTotal;
   }
 
   void clear() {
@@ -191,6 +194,26 @@ final class SfxVoice {
     this.breathControlPosition = 0;
     this.priority = VoicePriority.Low;
     System.arraycopy(EMPTY, 0, this.samples, 28, EMPTY.length);
+  }
+
+  boolean isUsed() {
+    return this.used;
+  }
+
+  boolean isFinished() {
+    return this.adsrEnvelope.isFinished() || (this.soundBankEntry.isEnd() && this.counter.getCurrentSampleIndex() >= EMPTY.length);
+  }
+
+  Channel getChannel() {
+    return this.channel;
+  }
+
+  int getPriorityOrder() {
+    return this.priorityOrder;
+  }
+
+  void setPriorityOrder(final int priorityOrder) {
+    this.priorityOrder = priorityOrder;
   }
 
 

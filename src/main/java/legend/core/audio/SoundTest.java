@@ -19,7 +19,7 @@ public final class SoundTest {
 
     final SoundEffects sfx = new SoundEffects(Unpacker.loadDirectory("characters\\dart\\sounds\\combat"));
 
-    final SfxSequencer sfxSequencer = new SfxSequencer(4, 12);
+    final SfxSequencer sfxSequencer = new SfxSequencer(8, 12);
 
     sfxSequencer.loadSfx(sfx);
 

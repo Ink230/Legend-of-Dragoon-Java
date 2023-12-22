@@ -46,6 +46,8 @@ public final class SfxSequencer {
 
   private SoundEffects sfx;
   private int samplesToProcess;
+  private boolean ending = false;
+  private int endingCount;
 
   public SfxSequencer(final int voiceCount, final int interpolationBitDepth) {
     if(interpolationBitDepth > 12) {
@@ -69,6 +71,7 @@ public final class SfxSequencer {
     final ShortArrayList output = new ShortArrayList();
 
     while(this.sfx != null) {
+      this.clearFinishedVoices();
 
       this.tickSequence();
 
@@ -80,6 +83,18 @@ public final class SfxSequencer {
 
         left += this.voiceOutputBuffer[0];
         right += this.voiceOutputBuffer[1];
+      }
+
+      if(this.ending) {
+        if(left == 0 && right == 0) {
+          this.endingCount++;
+
+          if(this.endingCount >= 441) {
+            this.sfx = null;
+          }
+        } else {
+          this.endingCount = 0;
+        }
       }
 
       output.add((short)left);
@@ -100,22 +115,48 @@ public final class SfxSequencer {
     System.out.println("Done");
   }
 
+  private void clearFinishedVoices() {
+    for(final SfxVoice voice : this.voices) {
+      if(!voice.isUsed() || !voice.isFinished()) {
+        continue;
+      }
+
+      if(this.playingVoices > 0) {
+        this.playingVoices--;
+      }
+
+      for(final SfxVoice otherVoice : this.voices) {
+        if(otherVoice.getPriorityOrder() > voice.getPriorityOrder()) {
+          otherVoice.setPriorityOrder(otherVoice.getPriorityOrder() - 1);
+        }
+      }
+
+      voice.clear();
+    }
+  }
+
   private void tickSequence() {
     if(this.samplesToProcess > 0) {
       this.samplesToProcess--;
+
       return;
     }
 
     while(this.samplesToProcess == 0) {
+      if(this.ending) {
+        this.sfx = null;
+        return;
+      }
+
       final Command command = this.sfx.getNextCommand();
 
       this.commandCallbackMap.get(command.getClass()).execute(command);
 
-      if(this.sfx == null) {
+      if(this.ending) {
         return;
       }
 
-      this.samplesToProcess = (6500);
+      this.samplesToProcess = (int)(command.getDeltaTime() * this.sfx.getSamplesPerTick());
     }
   }
 
@@ -138,7 +179,7 @@ public final class SfxSequencer {
   }
 
   private SfxVoice selectVoice() {
-    return this.voices[0];
+    return this.voices[this.playingVoices++];
   }
 
   private void keyOffMatchingNotes() {
@@ -146,11 +187,18 @@ public final class SfxSequencer {
   }
 
   private void portamentoChange(final PortamentoChange portamentoChange) {
+    final Channel channel = portamentoChange.getChannel();
 
+    for(final SfxVoice voice : this.voices) {
+      if(voice.isUsed() && voice.getChannel() == channel) {
+        voice.portamento(portamentoChange.getPortamento(), portamentoChange.getTotalTime());
+      }
+    }
   }
 
   private void endOfTrack(final EndOfTrack endOfTrack) {
-    this.sfx = null;
+    this.samplesToProcess = 44_100;
+    this.ending = true;
   }
 
   public void loadSfx(final SoundEffects sfx) {
