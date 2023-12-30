@@ -124,7 +124,7 @@ import static legend.game.Scus94491BpeSegment_8005._800503f8;
 import static legend.game.Scus94491BpeSegment_8005._80050424;
 import static legend.game.Scus94491BpeSegment_8005._80052c40;
 import static legend.game.Scus94491BpeSegment_8005.digits_80052b40;
-import static legend.game.Scus94491BpeSegment_8005.index_80052c38;
+import static legend.game.Scus94491BpeSegment_8005.collidedPrimitiveIndex_80052c38;
 import static legend.game.Scus94491BpeSegment_8005.monsterSoundFileIndices_800500e8;
 import static legend.game.Scus94491BpeSegment_8005.renderBorder_80052b68;
 import static legend.game.Scus94491BpeSegment_8005.shadowScale_8005039c;
@@ -4090,7 +4090,7 @@ public final class Scus94491BpeSegment_8002 {
   public static void FUN_8002a9c0() {
     submapCut_80052c30 = 675;
     submapScene_80052c34 = 4;
-    index_80052c38 = 0;
+    collidedPrimitiveIndex_80052c38 = 0;
     submapCut_80052c3c = -1;
     _80052c40 = false;
     submapEnvState_80052c44 = 2;

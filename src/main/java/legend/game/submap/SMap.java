@@ -1,6 +1,7 @@
 package legend.game.submap;
 
 import legend.core.Config;
+import legend.core.IoHelper;
 import legend.core.MathHelper;
 import legend.core.RenderEngine;
 import legend.core.gpu.Bpp;
@@ -12,9 +13,12 @@ import legend.core.gpu.Rect4i;
 import legend.core.gte.GsCOORDINATE2;
 import legend.core.gte.MV;
 import legend.core.gte.ModelPart10;
+import legend.core.gte.TmdObjTable1c;
 import legend.core.gte.TmdWithId;
 import legend.core.memory.Method;
 import legend.core.memory.types.IntRef;
+import legend.core.opengl.Obj;
+import legend.core.opengl.PolyBuilder;
 import legend.core.opengl.QuadBuilder;
 import legend.core.opengl.TmdObjLoader;
 import legend.game.EngineState;
@@ -34,7 +38,6 @@ import legend.game.scripting.ScriptParam;
 import legend.game.scripting.ScriptState;
 import legend.game.scripting.ScriptStorageParam;
 import legend.game.tim.Tim;
-import legend.game.tmd.Renderer;
 import legend.game.tmd.UvAdjustmentMetrics14;
 import legend.game.types.ActiveStatsa0;
 import legend.game.types.AnimatedSprite08;
@@ -123,7 +126,6 @@ import static legend.game.Scus94491BpeSegment_8003.GsGetLw;
 import static legend.game.Scus94491BpeSegment_8003.GsGetLws;
 import static legend.game.Scus94491BpeSegment_8003.GsInitCoordinate2;
 import static legend.game.Scus94491BpeSegment_8003.GsSetFlatLight;
-import static legend.game.Scus94491BpeSegment_8003.GsSetLightMatrix;
 import static legend.game.Scus94491BpeSegment_8003.GsSetSmapRefView2L;
 import static legend.game.Scus94491BpeSegment_8003.PopMatrix;
 import static legend.game.Scus94491BpeSegment_8003.PushMatrix;
@@ -137,7 +139,7 @@ import static legend.game.Scus94491BpeSegment_8005._80050274;
 import static legend.game.Scus94491BpeSegment_8005._800503f8;
 import static legend.game.Scus94491BpeSegment_8005._80050424;
 import static legend.game.Scus94491BpeSegment_8005._80052c40;
-import static legend.game.Scus94491BpeSegment_8005.index_80052c38;
+import static legend.game.Scus94491BpeSegment_8005.collidedPrimitiveIndex_80052c38;
 import static legend.game.Scus94491BpeSegment_8005.renderBorder_80052b68;
 import static legend.game.Scus94491BpeSegment_8005.submapCutForSave_800cb450;
 import static legend.game.Scus94491BpeSegment_8005.submapCut_80052c30;
@@ -177,6 +179,7 @@ import static legend.game.Scus94491BpeSegment_800b.whichMenu_800bdc38;
 import static legend.game.Scus94491BpeSegment_800c.lightColourMatrix_800c3508;
 import static legend.game.Scus94491BpeSegment_800c.lightDirectionMatrix_800c34e8;
 import static legend.game.Scus94491BpeSegment_800c.worldToScreenMatrix_800c3548;
+import static org.lwjgl.opengl.GL11C.GL_TRIANGLE_STRIP;
 
 public class SMap extends EngineState {
   private int fmvIndex_800bf0dc;
@@ -1178,6 +1181,14 @@ public class SMap extends EngineState {
       }
 
       case 3 -> {
+        if(this.debugThing != null) {
+          for(int i = 0; i < this.debugThing.length; i++) {
+            this.debugThing[i].delete();
+          }
+
+          this.debugThing = null;
+        }
+
         this.collisionGeometry_800cbe08.unloadCollision();
         this.clearLatches();
         this.unloadSmap();
@@ -1189,6 +1200,15 @@ public class SMap extends EngineState {
 
       case 4 -> {
         this.renderEnvironment();
+
+        if(this.debugThing != null) {
+          for(int i = 0; i < this.debugThing.length; i++) {
+            this.debugThing[i].delete();
+          }
+
+          this.debugThing = null;
+        }
+
         this.collisionGeometry_800cbe08.unloadCollision();
         this.clearLatches();
         this.unloadSmap();
@@ -1200,6 +1220,15 @@ public class SMap extends EngineState {
 
       case 5 -> {
         this.renderEnvironment();
+
+        if(this.debugThing != null) {
+          for(int i = 0; i < this.debugThing.length; i++) {
+            this.debugThing[i].delete();
+          }
+
+          this.debugThing = null;
+        }
+
         this.collisionGeometry_800cbe08.unloadCollision();
         this.clearLatches();
         this.unloadSmap();
@@ -1217,7 +1246,7 @@ public class SMap extends EngineState {
 
     //LAB_8002abdc
     //LAB_8002abe0
-    final int collisionAndTransitionInfo = this.getCollisionAndTransitionInfo(index_80052c38);
+    final int collisionAndTransitionInfo = this.getCollisionAndTransitionInfo(collidedPrimitiveIndex_80052c38);
     if((collisionAndTransitionInfo & 0x10) != 0) {
       this.mapTransition(collisionAndTransitionInfo >>> 22, collisionAndTransitionInfo >>> 16 & 0x3f);
     }
@@ -4165,7 +4194,7 @@ public class SMap extends EngineState {
     // The first condition is to fix what we believe is caused by menus loading too fast in SC. Submaps still take several frames to initialize,
     // and if you spam triangle and escape immediately after the post-combat screen it's possible to get into this method when index_80052c38 is
     // still set to -1. See #304 for more details.
-    if(index_80052c38 >= 0 && index_80052c38 < 0x40 && this.collisionAndTransitions_800cb460[index_80052c38] != 0) {
+    if(collidedPrimitiveIndex_80052c38 >= 0 && collidedPrimitiveIndex_80052c38 < 0x40 && this.collisionAndTransitions_800cb460[collidedPrimitiveIndex_80052c38] != 0) {
       return false;
     }
 
@@ -4273,6 +4302,9 @@ public class SMap extends EngineState {
     }
   }
 
+  private Obj[] debugThing;
+  private Obj[] debugThing2;
+
   @Method(0x800e519cL)
   private void renderEnvironment() {
     //LAB_800e51e8
@@ -4293,19 +4325,91 @@ public class SMap extends EngineState {
         this.collisionGeometry_800cbe08.dobj2Ptr_20.obj = TmdObjLoader.fromObjTable("EnvironmentSomethingModel", this.collisionGeometry_800cbe08.dobj2Ptr_20.tmd_08);
       }
 
-      final MV lw = new MV();
-      final MV ls = new MV();
-      GsGetLws(this.collisionGeometry_800cbe08.dobj2Ptr_20.coord2_04, lw, ls);
-      GsSetLightMatrix(lw);
-      GTE.setTransforms(ls);
-      Renderer.renderDobj2(this.collisionGeometry_800cbe08.dobj2Ptr_20, false, 0);
+      if(this.debugThing == null) {
+        this.debugThing = new Obj[this.collisionGeometry_800cbe08.count_0c];
 
-      RENDERER.queueModel(this.collisionGeometry_800cbe08.dobj2Ptr_20.obj, lw)
-        .screenspaceOffset(this.screenOffsetX_800cb568 + 8, -this.screenOffsetY_800cb56c)
-      ;
+        for(int i = 0; i < this.collisionGeometry_800cbe08.count_0c; i++) {
+          final SomethingStructSub0c_1 struct2 = this.collisionGeometry_800cbe08.ptr_14[i];
+          final TmdObjTable1c.Primitive primitive = this.collisionGeometry_800cbe08.getPrimitiveForOffset(struct2.primitivesOffset_04);
+          final int packetOffset = struct2.primitivesOffset_04 - primitive.offset();
+          final int packetIndex = packetOffset / (primitive.width() + 4);
+          final int remainder = packetOffset % (primitive.width() + 4);
+          final byte[] packet = primitive.data()[packetIndex];
+
+          //LAB_800e8a38
+          final PolyBuilder builder = new PolyBuilder("Collision Something " + struct2.primitivesOffset_04, GL_TRIANGLE_STRIP);
+          builder.translucency(Translucency.HALF_B_PLUS_HALF_F);
+
+          for(int t0 = 0; t0 < struct2.count_00; t0++) {
+            builder.addVertex(this.collisionGeometry_800cbe08.verts_04[IoHelper.readUShort(packet, remainder + 2 + t0 * 2)]);
+          }
+
+          this.debugThing[i] = builder.build();
+        }
+      }
+
+      final MV lw = new MV();
+      GsGetLw(this.collisionGeometry_800cbe08.dobj2Ptr_20.coord2_04, lw);
+
+//      RENDERER.queueModel(this.collisionGeometry_800cbe08.dobj2Ptr_20.obj, lw)
+//        .screenspaceOffset(this.screenOffsetX_800cb568 + 8, -this.screenOffsetY_800cb56c)
+//      ;
+
+      if(this.collisionGeometry_800cbe08.count_0c == this.debugThing.length) {
+        for(int i = 0; i < this.collisionGeometry_800cbe08.count_0c; i++) {
+          final RenderEngine.QueuedModel model = RENDERER.queueModel(this.debugThing[i])
+            .screenspaceOffset(this.screenOffsetX_800cb568 + 8, -this.screenOffsetY_800cb56c)
+          ;
+
+          if((this.getCollisionAndTransitionInfo(i) & 0x1) != 0) {
+            model.colour(0.5f, 0.0f, 1.0f);
+          }
+
+          if((this.getCollisionAndTransitionInfo(i) & 0x2) != 0) {
+            model.colour(1.0f, 0.5f, 0.0f);
+          }
+
+          if((this.getCollisionAndTransitionInfo(i) & 0x4) != 0) {
+            model.colour(1.0f, 1.0f, 0.0f);
+          }
+
+          if(this.FUN_800e6798(i) == 0) {
+            model.colour(1.0f, 0.0f, 0.0f);
+          }
+
+          if((this.getCollisionAndTransitionInfo(i) & 0x10) != 0) {
+            model.colour(0.0f, 1.0f, 0.0f);
+          }
+
+          if((this.getCollisionAndTransitionInfo(i) & 0x20) != 0) {
+            model.colour(0.0f, 1.0f, 1.0f);
+          }
+
+          for(int sobjIndex = 0; sobjIndex < this.sobjCount_800c6730; sobjIndex++) {
+            if(this.sobjs_800c6880[sobjIndex].innerStruct_00.ui_16c == i) {
+              model.colour(0.0f, 0.0f, sobjIndex == 0 ? 1.0f : 0.5f);
+            }
+          }
+
+          for(int n = 0; n < 256; n++) {
+            final Struct14_2 a3 = this._800f7f74[n];
+
+            if(a3.submapCut_04 == submapCut_80052c30 && i == a3.primitiveIndex_06) {
+              model.colour(1.0f, 0.0f, 1.0f);
+              break;
+            }
+          }
+        }
+      }
     } else if(this.collisionGeometry_800cbe08.dobj2Ptr_20.obj != null) {
       this.collisionGeometry_800cbe08.dobj2Ptr_20.obj.delete();
       this.collisionGeometry_800cbe08.dobj2Ptr_20.obj = null;
+
+      for(int i = 0; i < this.debugThing.length; i++) {
+        this.debugThing[i].delete();
+      }
+
+      this.debugThing = null;
     }
   }
 
@@ -4481,8 +4585,8 @@ public class SMap extends EngineState {
     if(newScene == 0x3fd) {
       whichMenu_800bdc38 = WhichMenu.INIT_SAVE_GAME_MENU_16;
       this.smapLoadingStage_800cb430 = SubmapState.LOAD_MENU_13;
-      this._800f7e2c[0]._04 = index_80052c38;
-      index_80052c38 = this._800f7e2c[gameState_800babc8.chapterIndex_98]._04;
+      this._800f7e2c[0]._04 = collidedPrimitiveIndex_80052c38;
+      collidedPrimitiveIndex_80052c38 = this._800f7e2c[gameState_800babc8.chapterIndex_98]._04;
       submapCutForSave_800cb450 = this._800f7e2c[gameState_800babc8.chapterIndex_98]._00;
       this._800cab24 = this.FUN_800ea974(-1);
       SCRIPTS.pause();
@@ -4759,7 +4863,7 @@ public class SMap extends EngineState {
             this.smapLoadingStage_800cb430 = SubmapState.RENDER_SUBMAP_12;
             this._800f7e4c = false;
             this.mapTransition(this._800f7e2c[gameState_800babc8.chapterIndex_98]._00, this._800f7e2c[gameState_800babc8.chapterIndex_98]._00);
-            index_80052c38 = this._800f7e2c[0]._04;
+            collidedPrimitiveIndex_80052c38 = this._800f7e2c[0]._04;
             break;
         }
       }
@@ -5800,11 +5904,11 @@ public class SMap extends EngineState {
   private void FUN_800ea84c(final MediumStruct a0) {
     if(this.isScriptLoaded(0)) {
       if(a0._44) {
-        index_80052c38 = this.sobjs_800c6880[0].innerStruct_00.ui_16c;
+        collidedPrimitiveIndex_80052c38 = this.sobjs_800c6880[0].innerStruct_00.ui_16c;
 
         //LAB_800ea8d4
         for(int i = 0; i < a0.count_40; i++) {
-          if(index_80052c38 == a0.arr_00[i]) {
+          if(collidedPrimitiveIndex_80052c38 == a0.arr_00[i]) {
             a0._44 = false;
             break;
           }
@@ -5820,7 +5924,7 @@ public class SMap extends EngineState {
   @Method(0x800ea90cL)
   private void FUN_800ea90c(final MediumStruct a0) {
     if(this.isScriptLoaded(0)) {
-      index_80052c38 = this.sobjs_800c6880[0].innerStruct_00.ui_16c;
+      collidedPrimitiveIndex_80052c38 = this.sobjs_800c6880[0].innerStruct_00.ui_16c;
     }
   }
 
@@ -5843,8 +5947,8 @@ public class SMap extends EngineState {
       for(int i = 0; i < 256; i++) {
         if(a0 != 0) {
           final Struct14_2 a3 = this._800f7f74[i];
-          if(a3._04 == a0) {
-            a2.arr_00[a2.count_40] = a3._06;
+          if(a3.submapCut_04 == a0) {
+            a2.arr_00[a2.count_40] = a3.primitiveIndex_06;
             a2.count_40++;
           }
         }

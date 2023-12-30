@@ -51,6 +51,10 @@ public class CollisionGeometry {
   }
 
   public TmdObjTable1c.Primitive getPrimitiveForOffset(final int offset) {
+    return this.primitives_10[this.getPrimitiveIndexForOffset(offset)];
+  }
+
+  public int getPrimitiveIndexForOffset(final int offset) {
     int primitivesIndex;
     for(primitivesIndex = 0; primitivesIndex < this.primitives_10.length - 1; primitivesIndex++) {
       if(this.primitives_10[primitivesIndex + 1].offset() > offset) {
@@ -58,7 +62,7 @@ public class CollisionGeometry {
       }
     }
 
-    return this.primitives_10[primitivesIndex];
+    return primitivesIndex;
   }
 
   @Method(0x800e866cL)
@@ -520,6 +524,7 @@ public class CollisionGeometry {
         final Vector3f normal = this.normals_08[s3];
         final SomethingStructSub0c_1 struct = this.ptr_14[s3];
 
+        // This causes Dart to move up/down a slope
         if(Math.abs(y - (-normal.x * endX - normal.z * endZ - struct._08) / normal.y) < 50) {
           //LAB_800e9e64
           movement.y = (-normal.x * (x + movement.x) - normal.z * (z + movement.z) - struct._08) / normal.y;

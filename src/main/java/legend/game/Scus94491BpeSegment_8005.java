@@ -178,7 +178,7 @@ public final class Scus94491BpeSegment_8005 {
   public static int submapCut_80052c30 = 675;
   public static int submapScene_80052c34 = 4;
   /** TODO This seems like it's set to a lot of different things, hopefully they're actually related. */
-  public static int index_80052c38;
+  public static int collidedPrimitiveIndex_80052c38;
   public static int submapCut_80052c3c = -1;
   /** Moved from SMAP since it's referenced unconditionally when saving the game */
   public static int submapCutForSave_800cb450;
