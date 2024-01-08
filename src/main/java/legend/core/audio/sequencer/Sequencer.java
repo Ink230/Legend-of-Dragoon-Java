@@ -28,6 +28,7 @@ import org.apache.logging.log4j.MarkerManager;
 import java.util.HashMap;
 import java.util.Map;
 
+import static legend.game.Scus94491BpeSegment_8005.reverbConfigs_80059f7c;
 import static org.lwjgl.openal.AL10.AL_BUFFERS_PROCESSED;
 import static org.lwjgl.openal.AL10.AL_FORMAT_STEREO16;
 import static org.lwjgl.openal.AL10.AL_PLAYING;
@@ -369,15 +370,40 @@ public final class Sequencer {
   }
 
   void dataEntry(final DataEntry dataEntry) {
-    // TODO
+    LOGGER.info(SEQUENCER_MARKER, "Data entry NRPN: %d Value: %d", this.backgroundMusic.getNrpn(), dataEntry.getValue());
+
+    final int value = dataEntry.getValue();
+
+    switch(this.backgroundMusic.getNrpn()) {
+      case 0x00 -> {
+        this.backgroundMusic.setRepeatCount(value);
+        return;
+      }
+      case 0x04 -> LOGGER.warn(SEQUENCER_MARKER, "Unimplemented Data Entry - Attack (linear)");
+      case 0x05 -> LOGGER.warn(SEQUENCER_MARKER, "Unimplemented Data Entry - Attack (exponential)");
+      case 0x06 -> LOGGER.warn(SEQUENCER_MARKER, "Unimplemented Data Entry - Decay shift");
+      case 0x07 -> LOGGER.warn(SEQUENCER_MARKER, "Unimplemented Data Entry - Sustain level");
+      case 0x08 -> LOGGER.warn(SEQUENCER_MARKER, "Unimplemented Data Entry - Sustain (linear)");
+      case 0x09 -> LOGGER.warn(SEQUENCER_MARKER, "Unimplemented Data Entry - Sustain (exponential)");
+      case 0x0a -> LOGGER.warn(SEQUENCER_MARKER, "Unimplemented Data Entry - Release (linear)");
+      case 0x0b -> LOGGER.warn(SEQUENCER_MARKER, "Unimplemented Data Entry - Release (exponential)");
+      case 0x0c -> LOGGER.warn(SEQUENCER_MARKER, "Unimplemented Data Entry - Sustain direction");
+      case 0x0f -> this.setReverbConfig(reverbConfigs_80059f7c[value].config_02);
+      case 0x10 -> this.setReverbVolume(value, value);
+      default -> LOGGER.error(SEQUENCER_MARKER, "Unknown Data entry NRPN: 0x%x", this.backgroundMusic.getNrpn());
+    }
   }
 
   void dataEntryLsb(final DataEntryLsb dataEntryLsb) {
-    // TODO
+    LOGGER.info(SEQUENCER_MARKER, "Data Entry LSB Value: 0x%x", dataEntryLsb.getValue());
+
+    this.backgroundMusic.dataEntryLsb(dataEntryLsb.getValue());
   }
 
   void dataEntryMsb(final DataEntryMsb dataEntryMsb) {
-    // TODO
+    LOGGER.info(SEQUENCER_MARKER, "Data Entry MSB Value: 0x%x", dataEntryMsb.getValue());
+
+    this.backgroundMusic.dataEntryMsb(dataEntryMsb.getValue());
   }
 
   private void changeTempo(final TempoChange tempoChange) {

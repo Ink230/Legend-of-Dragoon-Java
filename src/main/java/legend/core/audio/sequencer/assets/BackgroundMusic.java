@@ -20,6 +20,14 @@ public final class BackgroundMusic {
   private final Command[] sequence;
   private int sequencePosition;
 
+  private int nrpn;
+  private int lsbType;
+  private int dataInstrumentIndex;
+  private int repeatCount;
+  private int repeatCounter;
+  private int repeatPosition;
+  private boolean repeat;
+
   public BackgroundMusic(final List<FileData> files, final int fileId) {
     this.songId = files.get(0).readUShort(0);
 
@@ -80,6 +88,11 @@ public final class BackgroundMusic {
   }
 
   public Command getNextCommand() {
+    if(this.repeat) {
+      this.repeat = false;
+      this.sequencePosition = this.repeatPosition;
+    }
+
     return this.sequence[this.sequencePosition++];
   }
 
@@ -105,5 +118,52 @@ public final class BackgroundMusic {
 
   public int getSongId() {
     return this.songId;
+  }
+
+  public int getNrpn() {
+    return this.nrpn;
+  }
+
+  public void setRepeatCount(final int repeatCount) {
+    this.repeatCount = repeatCount;
+  }
+
+  public void dataEntryLsb(final int value) {
+    switch(this.lsbType) {
+      case 0x00 -> {
+        this.nrpn = 0x00;
+        this.repeatCount = value;
+      }
+      case 0x01, 0x02 -> this.nrpn = value;
+    }
+  }
+
+  public void dataEntryMsb(final int nrpn) {
+    if(nrpn >= 0x00 && nrpn < 0x10) {
+      this.lsbType = 0x10;
+      this.dataInstrumentIndex = nrpn;
+    } else if(nrpn == 0x10) {
+      this.lsbType = 0x01;
+    } else if(nrpn == 0x14) {
+      this.lsbType = 0x00;
+      this.nrpn = 0x00;
+      this.repeatPosition = this.sequencePosition;
+    } else if(nrpn == 0x1e) {
+      this.lsbType = 0x00;
+
+      if(this.repeatCount == 0x7f) {
+        this.repeat = true;
+      } else if(this.repeatCounter < this.repeatCount) {
+        this.repeatCounter++;
+        this.repeat = true;
+      } else {
+        this.repeatPosition = 0;
+        this.repeatCounter = 0;
+        this.repeat = false;
+      }
+    } else if(nrpn == 0x7f) {
+      this.lsbType = 0;
+      this.dataInstrumentIndex = 0xff;
+    }
   }
 }

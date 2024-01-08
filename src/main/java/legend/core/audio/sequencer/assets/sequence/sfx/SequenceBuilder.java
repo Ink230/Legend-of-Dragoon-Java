@@ -23,16 +23,17 @@ public final class SequenceBuilder {
   private int readDeltaTime() {
     int deltaTime = 0;
 
-    while(true) {
-      final int part = this.data.readUByte(this.position++);
-
+    for(int i = 0; i < 4; i++) {
       deltaTime <<= 7;
+      final int part = this.data.readUByte(this.position++);
       deltaTime |= part & 0x7f;
 
       if((part & 0x80) == 0) {
-        return deltaTime;
+        break;
       }
     }
+
+    return deltaTime;
   }
 
   private Command polyphonicKeyPressure(final int channelIndex) {
