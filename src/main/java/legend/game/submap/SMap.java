@@ -13,7 +13,14 @@ import legend.core.gte.MV;
 import legend.core.gte.ModelPart10;
 import legend.core.gte.TmdObjTable1c;
 import legend.core.memory.Method;
+import legend.core.opengl.Mesh;
+import legend.core.opengl.MeshObj;
+import legend.core.opengl.Obj;
 import legend.core.opengl.PolyBuilder;
+import legend.core.opengl.Shader;
+import legend.core.opengl.ShaderManager;
+import legend.core.opengl.ShaderOptions;
+import legend.core.opengl.ShaderType;
 import legend.core.opengl.TmdObjLoader;
 import legend.game.EngineState;
 import legend.game.EngineStateEnum;
@@ -147,6 +154,7 @@ import static legend.game.Scus94491BpeSegment_800c.lightColourMatrix_800c3508;
 import static legend.game.Scus94491BpeSegment_800c.lightDirectionMatrix_800c34e8;
 import static legend.game.Scus94491BpeSegment_800c.worldToScreenMatrix_800c3548;
 import static org.lwjgl.opengl.GL11C.GL_LINES;
+import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11C.GL_TRIANGLE_STRIP;
 
 public class SMap extends EngineState {
@@ -3667,6 +3675,40 @@ public class SMap extends EngineState {
     return latch;
   }
 
+  private static class ThingShaderOptions implements ShaderOptions<ThingShaderOptions> {
+    private final Shader<ThingShaderOptions>.UniformFloat alphaUniform;
+    private float alpha;
+
+    private ThingShaderOptions(final Shader<ThingShaderOptions>.UniformFloat alphaUniform) {
+      this.alphaUniform = alphaUniform;
+    }
+
+    public ThingShaderOptions alpha(final float alpha) {
+      this.alpha = alpha;
+      return this;
+    }
+
+    @Override
+    public void apply() {
+      this.alphaUniform.set(this.alpha);
+    }
+  }
+
+  private final ShaderType<ThingShaderOptions> THING_SHADER = new ShaderType<>(
+    options -> RenderEngine.loadShader("thing", "thing", options),
+    shader -> {
+      shader.bindUniformBlock("transforms", Shader.UniformBuffer.TRANSFORM);
+      shader.bindUniformBlock("transforms2", Shader.UniformBuffer.TRANSFORM2);
+      final Shader<ThingShaderOptions>.UniformFloat alpha = shader.new UniformFloat("alpha");
+      return () -> new ThingShaderOptions(alpha);
+    }
+  );
+
+  private Obj thingObj;
+  private Shader<ThingShaderOptions> thingShader;
+  private final MV thingTransforms = new MV();
+  private float thingAlpha;
+
   @Method(0x800e5104L)
   private void loadAndRenderSubmapModelAndEffects(final int collisionGeometryIndexForInitialPlayerPosition, final MapTransitionData4c mapTransitionData) {
     this.executeSubmapMediaLoadingStage(collisionGeometryIndexForInitialPlayerPosition);
@@ -3686,7 +3728,29 @@ public class SMap extends EngineState {
     this.collisionGeometry_800cbe08.tick();
 
     if(submapFullyLoaded_800bd7b4) {
+      if(this.thingObj == null) {
+        this.thingShader = ShaderManager.addShader(this.THING_SHADER);
+
+        final Mesh mesh = new Mesh(GL_TRIANGLES, new float[] {
+          -1.0f,  0.0f, 0.0f,
+           0.0f, -2.0f, 0.0f,
+           1.0f,  0.0f, 0.0f,
+        }, 3);
+        mesh.attribute(0, 0L, 3, 3);
+
+        this.thingObj = new MeshObj(null, new Mesh[] {mesh});
+      }
+
       this.renderSubmap();
+
+      this.thingTransforms.scaling(100.0f);
+      this.thingTransforms.transfer.set(this.sobjs_800c6880[0].innerStruct_00.model_00.coord2_14.coord.transfer);
+      RENDERER
+        .queueModel(this.thingObj, this.thingTransforms, this.THING_SHADER)
+        .options()
+          .alpha((MathHelper.sin(this.thingAlpha) + 1.0f) / 2.0f);
+
+      this.thingAlpha += 0.02f;
     }
   }
 
