@@ -353,7 +353,6 @@ public class Sequencer {
   @Method(0x80046a04L)
   public void sssqHandleKeyOn(final SequenceData124 sequenceData) {
     LOGGER.debug(SEQUENCE_MARKER, "Key on channel %d, note %d, velocity %d", sequenceData.command_000 & 0xf, sequenceData.param0_002, sequenceData.param1_003);
-
     if(sequenceData.param1_003 == 0) { // Velocity
       this.sssqHandleKeyOff(sequenceData);
       return;
@@ -556,10 +555,9 @@ public class Sequencer {
                   //LAB_800472d0
                   playingNote._12 += playingNote.breath_3c & 0xfff;
                 } else {
-                  final int v0_0 = playingNote.breath_3c & 0xf000;
-                  if(v0_0 != 0) {
-                    playingNote.breath_3c = playingNote.breath_3c & 0xfff | v0_0 - 0x1000;
-                    playingNote._12 += playingNote.breath_3c & 0xfff;
+                  if((playingNote.breath_3c & 0xf000) != 0) {
+                    playingNote.breath_3c = ((playingNote.breath_3c & 0xf000) - 0x1000) | 0x78;
+                    playingNote._12 += 0x78;
                   } else {
                     //LAB_800472c0
                     playingNote.breath_3c |= 0x6000;
