@@ -163,6 +163,7 @@ import static legend.game.Scus94491BpeSegment_800c.sequenceData_800c4ac8;
 import static legend.game.combat.environment.StageData.stageData_80109a98;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_DELETE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F12;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_Q;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
 import static org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL;
 
@@ -373,6 +374,19 @@ public final class Scus94491BpeSegment {
 
       if((mods & GLFW_MOD_CONTROL) != 0 && key == GLFW_KEY_W && currentEngineState_8004dd04 instanceof final Battle battle) {
         battle.endBattle();
+      }
+
+      if((mods & GLFW_MOD_CONTROL) != 0 && key == GLFW_KEY_Q) {
+        var activeGameSpeedMultiplier = Config.getGameSpeedMultiplier();
+
+        switch (activeGameSpeedMultiplier) {
+          case 1:
+            Config.setGameSpeedMultiplier(Config.getLoadedGameSpeedMultiplier());
+            break;
+          default:
+            Config.setGameSpeedMultiplier(1);
+            break;
+        }
       }
     });
 
