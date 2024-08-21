@@ -74,7 +74,12 @@ public final class ConfigStorage {
     offset += 4;
 
     for(int configIndex = 0; configIndex < configCount; configIndex++) {
-      final RegistryId configId = data.readRegistryId(offset);
+      RegistryId configId = data.readRegistryId(offset);
+
+      if (configId.modId() == "lod-core") {
+        configId = new RegistryId("lod_core", configId.entryId());
+      }
+
       offset += configId.toString().length() + 3;
 
       final RegistryDelegate<ConfigEntry<?>> delegate = REGISTRIES.config.getEntry(configId);
