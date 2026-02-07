@@ -24,6 +24,8 @@ import legend.game.inventory.WhichMenu;
 import legend.game.modding.coremod.CoreEngineStateTypes;
 import legend.game.modding.coremod.CoreMod;
 import legend.game.modding.events.worldmap.WorldMapEncounterEvent;
+import legend.game.modding.events.worldmap.WorldMapIgnoreLocationNotExistFallbackEvent;
+import legend.game.modding.events.worldmap.WorldMapIgnoreWMapFlagsEvent;
 import legend.game.saves.SavedGame;
 import legend.game.sound.SoundFile;
 import legend.game.sound.SoundFileIndices;
@@ -272,6 +274,8 @@ public class WMap extends EngineState<WMap> {
   private float mcqColour_800c6794;
 
   public final MapState100 mapState_800c6798 = new MapState100();
+  private boolean ignoreWmapFlags = false;
+  private boolean ignoreLocationNotExistFallback = false;
 
   private int cancelLocationEntryDelayTick_800c68a0;
   /**
@@ -712,6 +716,12 @@ public class WMap extends EngineState<WMap> {
     unloadSoundFile(9);
     loadWmapMusic(gameState_800babc8.chapterIndex_98);
     this.wmapState_800bb10c = WmapState.WAIT_FOR_MUSIC_TO_LOAD;
+
+    final WorldMapIgnoreLocationNotExistFallbackEvent ignoreLocationNotExistFallbackEvent = EVENTS.postEvent(new WorldMapIgnoreLocationNotExistFallbackEvent(this, gameState_800babc8, this.ignoreLocationNotExistFallback));
+    this.ignoreLocationNotExistFallback = ignoreLocationNotExistFallbackEvent.ignoreLocationNotExistFallback;
+
+    final WorldMapIgnoreWMapFlagsEvent ignoreWMapFlagsEvent = EVENTS.postEvent(new WorldMapIgnoreWMapFlagsEvent(this, gameState_800babc8, this.ignoreWmapFlags));
+    this.ignoreWmapFlags = ignoreWMapFlagsEvent.ignoreWMapFlags;
   }
 
   @Method(0x800ccc30L)
@@ -4720,7 +4730,7 @@ public class WMap extends EngineState<WMap> {
 
     //LAB_800e7be8
     //LAB_800e7c18
-    if(!locationExists || !gameState_800babc8.wmapFlags_15c.get(locationIndex)) {
+    if(!locationExists || (!ignoreLocationNotExistFallback && !gameState_800babc8.wmapFlags_15c.get(locationIndex))) {
       this.mapState_800c6798.submapCutFrom_c4 = 13; // Hellena
       this.mapState_800c6798.submapSceneFrom_c6 = 17;
       locationIndex = 5;
@@ -5561,7 +5571,7 @@ public class WMap extends EngineState<WMap> {
     }
 
     //LAB_800eb144
-    if(!gameState_800babc8.wmapFlags_15c.get(locationIndex)) {
+    if(!ignoreWmapFlags && !gameState_800babc8.wmapFlags_15c.get(locationIndex)) {
       return 1;
     }
 
