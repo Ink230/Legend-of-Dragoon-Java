@@ -4684,7 +4684,7 @@ public class WMap extends EngineState<WMap> {
 
     //LAB_800e7be8
     //LAB_800e7c18
-    if(!locationExists || (!ignoreLocationNotExistFallback && !gameState_800babc8.wmapFlags_15c.get(locationIndex))) {
+    if(!locationExists || (!this.ignoreLocationNotExistFallback && !gameState_800babc8.wmapFlags_15c.get(locationIndex))) {
       this.mapState_800c6798.submapCutFrom_c4 = 13; // Hellena
       this.mapState_800c6798.submapSceneFrom_c6 = 17;
       locationIndex = 5;
@@ -5525,7 +5525,7 @@ public class WMap extends EngineState<WMap> {
     }
 
     //LAB_800eb144
-    if(!ignoreWmapFlags && !gameState_800babc8.wmapFlags_15c.get(locationIndex)) {
+    if(!this.ignoreWmapFlags && !gameState_800babc8.wmapFlags_15c.get(locationIndex)) {
       return 1;
     }
 
