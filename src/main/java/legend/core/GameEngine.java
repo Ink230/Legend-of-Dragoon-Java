@@ -386,6 +386,7 @@ public final class GameEngine {
     LOGGER.info("Texture atlas created in %.02fs", (System.nanoTime() - t) / 1_000_000_000.0f);
   }
 
+  /** Initialize registered data for authoring/menu consumers without recreating renderer resources. */
   public static void initializeRemainingRegistries() {
     REGISTRY_ACCESS.initializeRemaining();
   }
