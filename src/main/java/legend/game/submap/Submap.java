@@ -11,6 +11,7 @@ import legend.game.tmd.UvAdjustmentMetrics14;
 import legend.game.types.GsRVIEW2;
 import org.joml.Vector2f;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -46,6 +47,12 @@ public abstract class Submap {
 
   protected Submap(final SMap smap) {
     this.smap = smap;
+  }
+
+  /** Return a behavior owner to hand off controller and actor scripts without running legacy bytecode. */
+  @Nullable
+  public SubmapScriptController scriptController() {
+    return null;
   }
 
   public abstract CompletableFuture<Void> loadEnv();

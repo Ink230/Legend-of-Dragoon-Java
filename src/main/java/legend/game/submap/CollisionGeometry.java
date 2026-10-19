@@ -54,12 +54,33 @@ public class CollisionGeometry {
 
   private boolean collisionLoaded_800f7f14;
 
+  private SubmapCollision customCollision;
+
   public Obj debugObj;
   public Obj debugLines;
   public Vector3f[] debugVertices;
 
   public CollisionGeometry(final SMap smap) {
     this.smap = smap;
+  }
+
+  /** Transfers ownership of the backend to this collision geometry; a replaced backend is closed first. */
+  public void setCustomCollision(final SubmapCollision collision) {
+    if(this.customCollision == collision) return;
+
+    final SubmapCollision previous = this.customCollision;
+    this.customCollision = null;
+    this.playerCollisionLatch_800cbe34 = false;
+    if(previous != null) previous.close();
+    this.customCollision = collision;
+  }
+
+  public boolean hasCustomCollision() {
+    return this.customCollision != null;
+  }
+
+  public void drawCustomCollisionDebug() {
+    if(this.customCollision != null) this.customCollision.drawDebug();
   }
 
   public TmdObjTable1c.Primitive getPrimitiveForOffset(final int offset) {
@@ -74,6 +95,11 @@ public class CollisionGeometry {
   }
 
   public void clearCollisionAndTransitionInfo() {
+    if(this.customCollision != null) {
+      this.customCollision.clearFlags();
+      return;
+    }
+
     Arrays.fill(this.collisionAndTransitions_800cb460, 0);
   }
 
@@ -88,6 +114,8 @@ public class CollisionGeometry {
    */
   @Method(0x800e6730L)
   public int getCollisionAndTransitionInfo(final int collisionPrimitiveIndex) {
+    if(this.customCollision != null) return this.customCollision.getFlags(collisionPrimitiveIndex);
+
     // This did unsigned comparison, so -1 was >= 0x40
     if(collisionPrimitiveIndex < 0 || collisionPrimitiveIndex >= 0x40) {
       return 0;
@@ -98,10 +126,20 @@ public class CollisionGeometry {
 
   @Method(0x800e675cL)
   public void setCollisionAndTransitionInfo(final int packed) {
+    if(this.customCollision != null) {
+      this.setCollisionAndTransitionInfo((packed >> 8 & 0xfc) / 4, packed);
+      return;
+    }
+
     this.collisionAndTransitions_800cb460[(packed >> 8 & 0xfc) / 4] = packed;
   }
 
   public void setCollisionAndTransitionInfo(final int index, final int value) {
+    if(this.customCollision != null) {
+      this.customCollision.setFlags(index, value);
+      return;
+    }
+
     this.collisionAndTransitions_800cb460[index] = value & ~0xff00 | index * 4 << 8;
   }
 
@@ -170,6 +208,8 @@ public class CollisionGeometry {
 
   @Method(0x800e8990L)
   public int getClosestCollisionPrimitive(final float x, final float y, final float z) {
+    if(this.customCollision != null) return this.customCollision.closest(x, y, z);
+
     final Vector3f vec = new Vector3f();
 
     int closestIndex = 0;
@@ -246,15 +286,23 @@ public class CollisionGeometry {
 
   @Method(0x800e8e50L)
   public void unloadCollision() {
-    this.collisionLoaded_800f7f14 = false;
-    this.playerCollisionLatch_800cbe34 = false;
+    try {
+      this.setCustomCollision(null);
+    } finally {
+      this.collisionLoaded_800f7f14 = false;
+      this.playerCollisionLatch_800cbe34 = false;
 
-    if(this.debugObj != null) {
-      this.debugObj.delete();
+      final Obj debugObj = this.debugObj;
+      final Obj debugLines = this.debugLines;
       this.debugObj = null;
-      this.debugLines.delete();
       this.debugLines = null;
       this.debugVertices = null;
+
+      try {
+        if(debugObj != null) debugObj.delete();
+      } finally {
+        if(debugLines != null) debugLines.delete();
+      }
     }
   }
 
@@ -264,10 +312,14 @@ public class CollisionGeometry {
     if(this.playerRotationWasUpdated_800d1a8c > 0) {
       this.playerRotationWasUpdated_800d1a8c--;
     }
+
+    if(this.customCollision != null) this.customCollision.tick();
   }
 
   @Method(0x800e9018L)
   public int getCollisionPrimitiveAtPoint(final float x, final float y, final float z, final boolean checkSteepness, final boolean checkY) {
+    if(this.customCollision != null) return this.customCollision.find(x, y, z, checkSteepness, checkY);
+
     int collisionPrimitiveIndexCount = 0;
 
     //LAB_800e9040
@@ -370,6 +422,11 @@ public class CollisionGeometry {
 
   @Method(0x800e92dcL)
   public void getMiddleOfCollisionPrimitive(final int primitiveIndex, final Vector3f out) {
+    if(this.customCollision != null) {
+      this.customCollision.center(primitiveIndex, out);
+      return;
+    }
+
     out.zero();
 
     if(!this.collisionLoaded_800f7f14 || primitiveIndex < 0 || primitiveIndex >= this.primitiveCount_0c) {
@@ -405,6 +462,8 @@ public class CollisionGeometry {
     if(this.smap.smapLoadingStage_800cb430 != SubmapState.RENDER_SUBMAP_12 && this.smap.smapLoadingStage_800cb430 != SubmapState.WAIT_FOR_FADE_IN) {
       return -1;
     }
+
+    if(this.customCollision != null) return this.customCollision.move(x, y, z, movement);
 
     if(flEq(movement.x, 0.0f) && flEq(movement.z, 0.0f)) {
       return -1;

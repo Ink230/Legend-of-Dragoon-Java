@@ -231,11 +231,14 @@ public class SMap extends EngineState<SMap> {
 
   public ScriptState<ScriptedObject> submapControllerState_800c6740;
 
+  private SubmapScriptController submapScriptController;
+  private boolean submapScriptControllerReady;
+
   private final Model124 playerModel_800c6748 = new Model124("Player");
 
   private boolean unloadSubmapParticles_800c6870;
 
-  public final ScriptState<SubmapObject210>[] sobjs_800c6880 = new ScriptState[20];
+  public ScriptState<SubmapObject210>[] sobjs_800c6880 = new ScriptState[20];
 
   public Submap submap;
 
@@ -518,9 +521,7 @@ public class SMap extends EngineState<SMap> {
 
   @Override
   public boolean requestTravel(final EngineDestination destination) {
-    if(this.transitioning_800f7e4c || this.pendingDestination != null || (getLoadedAudioFiles() & 0x82) != 0
-      || this.smapTicks_800c6ae0 < 3 * (3 - vsyncMode_8007a3b8)
-      || this.smapLoadingStage_800cb430 != SubmapState.RENDER_SUBMAP_12 && this.smapLoadingStage_800cb430 != SubmapState.WAIT_FOR_FADE_IN) return false;
+    if(!this.canStartTransition()) return false;
     final EngineStateType<?> type = REGISTRIES.engineStateTypes.getEntry(destination.engineState()).get();
     if(type == LodEngineStateTypes.SUBMAP.get()) {
       final MapTag data = destination.data().asMap();
@@ -536,6 +537,21 @@ public class SMap extends EngineState<SMap> {
     this.transitioning_800f7e4c = true;
     this.smapLoadingStage_800cb430 = SubmapState.TRANSITION_TO_ENGINE_STATE_18;
     return true;
+  }
+
+  /** Admits a typed battle request through the normal fade, effects, and submap unload sequence. */
+  public boolean requestBattle(final legend.game.combat.BattleRequest request) {
+    java.util.Objects.requireNonNull(request, "request");
+    if(!this.canStartTransition()) return false;
+    legend.game.combat.SBtld.startEncounter(request);
+    this.mapTransition(-1, 0);
+    return true;
+  }
+
+  private boolean canStartTransition() {
+    return !this.transitioning_800f7e4c && this.pendingDestination == null && (getLoadedAudioFiles() & 0x82) == 0
+      && this.smapTicks_800c6ae0 >= 3 * (3 - vsyncMode_8007a3b8)
+      && (this.smapLoadingStage_800cb430 == SubmapState.RENDER_SUBMAP_12 || this.smapLoadingStage_800cb430 == SubmapState.WAIT_FOR_FADE_IN);
   }
 
   @Override
@@ -3234,7 +3250,9 @@ public class SMap extends EngineState<SMap> {
       }
 
       //LAB_800e1390
-      this.attachedSobjEffect.tickAttachedSobjEffects(sobj.model_00, sobj.attachedEffectData_1d0, this.unloadSubmapParticles_800c6870, this.screenOffset_800cb568.x, this.screenOffset_800cb568.y);
+      if(this.submapScriptController == null || !this.submapScriptController.simulationPaused()) {
+        this.attachedSobjEffect.tickAttachedSobjEffects(sobj.model_00, sobj.attachedEffectData_1d0, this.unloadSubmapParticles_800c6870, this.screenOffset_800cb568.x, this.screenOffset_800cb568.y);
+      }
     }
 
     //LAB_800e139c
@@ -3316,10 +3334,32 @@ public class SMap extends EngineState<SMap> {
         final SubmapLoadEvent loadedEvent = EVENTS.postEvent(new SubmapLoadEvent(this, gameState_800babc8, this.submap, this.submap.script, this.submap.objects));
         this.submap.script = loadedEvent.submapScript;
 
+        final SubmapScriptController controller = this.submap.scriptController();
+        this.submapScriptController = controller;
+        this.submapScriptControllerReady = false;
+        if(controller != null) {
+          this.submapLifetime.own(() -> {
+            if(this.submapScriptController == controller) {
+              this.closeSubmapScriptController();
+            }
+          });
+        }
+
         //LAB_800e1914
         final ScriptState<ScriptedObject> submapController = SCRIPTS.allocateScriptState(0, "Submap controller", null);
         this.submapControllerState_800c6740 = submapController;
-        submapController.loadScriptFile(this.submap.script);
+        submapController.loadScriptFile(controller == null ? this.submap.script : null);
+        if(controller != null) {
+          submapController.setTicker((state, object) -> {
+            if(this.submapScriptControllerReady && SCRIPTS.willTick()) {
+              controller.tick(state);
+            }
+          });
+        }
+
+        if(this.submap.objects.size() > this.sobjs_800c6880.length) {
+          this.sobjs_800c6880 = Arrays.copyOf(this.sobjs_800c6880, this.submap.objects.size());
+        }
 
         final Set<CContainer> visited = new HashSet<>();
 
@@ -3334,7 +3374,7 @@ public class SMap extends EngineState<SMap> {
           state.setTicker(this::submapObjectTicker);
           state.setRenderer(this::submapObjectRenderer);
           state.setDestructor(this::scriptDestructor);
-          state.loadScriptFile(obj.script);
+          state.loadScriptFile(controller == null ? obj.script : null);
 
           final Model124 model = state.innerStruct_00.model_00;
           final CContainer tmd = this.submap.objects.get(i).model;
@@ -3375,7 +3415,7 @@ public class SMap extends EngineState<SMap> {
           state.innerStruct_00.cameraAttached_178 = i == 0; // Player
 
           //LAB_800e1ce4
-          final SobjPos14 pos = sobjPositions_800bd818[i];
+          final SobjPos14 pos = i < sobjPositions_800bd818.length ? sobjPositions_800bd818[i] : new SobjPos14();
           model.coord2_14.coord.transfer.set(pos.pos_00);
           model.coord2_14.transforms.rotate.set(pos.rot_0c);
 
@@ -3473,6 +3513,8 @@ public class SMap extends EngineState<SMap> {
   private void unloadSmap() {
     LOGGER.info("Unloading submap");
 
+    this.closeSubmapScriptController();
+
     this.collisionGeometry_800cbe08.unloadCollision();
     this.clearLatches();
 
@@ -3487,7 +3529,7 @@ public class SMap extends EngineState<SMap> {
 
     //LAB_800e229c
     for(int i = 0; i < this.submap.objects.size(); i++) {
-      final SobjPos14 pos = sobjPositions_800bd818[i];
+      final SobjPos14 pos = i < sobjPositions_800bd818.length ? sobjPositions_800bd818[i] : new SobjPos14();
 
       final ScriptState<SubmapObject210> sobjState = this.sobjs_800c6880[i];
       if(sobjState != null) {
@@ -3518,6 +3560,13 @@ public class SMap extends EngineState<SMap> {
     this.reloadSubmapEffects();
     new Tim(Loader.loadFileSync("shadow.tim")).uploadToGpu();
     this.mapIndicator.destroy();
+  }
+
+  private void closeSubmapScriptController() {
+    final SubmapScriptController controller = this.submapScriptController;
+    this.submapScriptController = null;
+    this.submapScriptControllerReady = false;
+    if(controller != null) controller.close();
   }
 
   @Method(0x800e2428L)
@@ -3856,6 +3905,11 @@ public class SMap extends EngineState<SMap> {
 
   private void renderCollisionDebug() {
     if(enableCollisionDebug) {
+      if(this.collisionGeometry_800cbe08.hasCustomCollision()) {
+        this.collisionGeometry_800cbe08.drawCustomCollisionDebug();
+        return;
+      }
+
       if(this.collisionGeometry_800cbe08.debugObj == null) {
         final List<Vector3f> vertices = new ArrayList<>();
 
@@ -4150,6 +4204,10 @@ public class SMap extends EngineState<SMap> {
       }
     }
 
+    if(this.submapScriptControllerReady && this.smapLoadingStage_800cb430 == SubmapState.RENDER_SUBMAP_12) {
+      this.submapScriptController.beforeFrame();
+    }
+
     //LAB_800e5a30
     //LAB_800e5a34
     //LAB_800e5ac4
@@ -4170,11 +4228,10 @@ public class SMap extends EngineState<SMap> {
 
       case LOAD_NEWROOT_1 -> {
         this.beginSubmapLifetime("bootstrap");
-        if(!REGISTRIES.submapProviders.getEntry(this.submapProvider).get().retailBootstrap()) {
-          this.smapLoadingStage_800cb430 = SubmapState.LOAD_ENVIRONMENT_3;
-          break;
+        if(REGISTRIES.submapProviders.getEntry(this.submapProvider).get().retailBootstrap()) {
+          this.submapLifetime.await("NEWROOT", loadFile("\\SUBMAP\\NEWROOT.RDT"), data -> this.newrootPtr_800cab04 = new NewRootStruct(data));
         }
-        this.submapLifetime.await("NEWROOT", loadFile("\\SUBMAP\\NEWROOT.RDT"), data -> this.newrootPtr_800cab04 = new NewRootStruct(data));
+        // These effects are shared by all providers, including maps without retail NEWROOT data.
         this.submapLifetime.await("savepoint assets", loadDir("\\SUBMAP\\savepoint"), files -> {
           this.savepointAnm1 = new AnmFile(files.get(0));
           this.savepointAnm2 = new AnmFile(files.get(1));
@@ -4247,6 +4304,10 @@ public class SMap extends EngineState<SMap> {
         this.submap.loadMapTransitionData(this.mapTransitionData_800cab24);
         this.submap.finishLoading();
         this.submap.applyDestinationSpawn();
+        if(this.submapScriptController != null) {
+          this.submapScriptController.loaded();
+          this.submapScriptControllerReady = true;
+        }
         this.autoSaveIfEnabled();
         startFadeEffect(2, 10);
         SCRIPTS.resume();
@@ -4476,12 +4537,13 @@ public class SMap extends EngineState<SMap> {
     this.renderEnvironmentAndHandleTransitions(scriptsTicked);
     this.setIndicatorStatusAndResetIndicatorTickCountOnReenable();
 
-    if(this.screenOffsetTicks < this.screenOffsetTicksTotal) {
+    final boolean simulationPaused = this.submapScriptController != null && this.submapScriptController.simulationPaused();
+    if(!simulationPaused && this.screenOffsetTicks < this.screenOffsetTicksTotal) {
       this.screenOffsetStart.lerp(this.screenOffsetDest, (this.screenOffsetTicks + 1.0f) / this.screenOffsetTicksTotal, this.screenOffset_800cb568);
       this.screenOffsetTicks++;
     }
 
-    if(this.geomOffsetTicks < this.geomOffsetTicksTotal) {
+    if(!simulationPaused && this.geomOffsetTicks < this.geomOffsetTicksTotal) {
       this.geomOffsetStart.lerp(this.geomOffsetDest, (this.geomOffsetTicks + 1.0f) / this.geomOffsetTicksTotal, this.geomOffset);
       this.geomOffsetTicks++;
 
@@ -4593,7 +4655,7 @@ public class SMap extends EngineState<SMap> {
   @ScriptParam(direction = ScriptParam.Direction.IN, type = ScriptParam.Type.INT, name = "collisionPrimitiveIndex", description = "The index")
   @Method(0x800e69f0L)
   private FlowControl scriptBlockCollisionPrimitive(final RunningScript<?> script) {
-    this.collisionGeometry_800cbe08.setCollisionAndTransitionInfo(this.collisionGeometry_800cbe08.getCollisionAndTransitionInfo(script.params_20[0].get()) | 0x8);
+    this.collisionGeometry_800cbe08.addBlocker(script.params_20[0].get());
     return FlowControl.CONTINUE;
   }
 
@@ -4601,7 +4663,7 @@ public class SMap extends EngineState<SMap> {
   @ScriptParam(direction = ScriptParam.Direction.IN, type = ScriptParam.Type.INT, name = "collisionPrimitiveIndex", description = "The index")
   @Method(0x800e6a28L)
   private FlowControl scriptUnblockCollisionPrimitive(final RunningScript<?> script) {
-    this.collisionGeometry_800cbe08.setCollisionAndTransitionInfo(this.collisionGeometry_800cbe08.getCollisionAndTransitionInfo(script.params_20[0].get()) & 0xffff_fff7);
+    this.collisionGeometry_800cbe08.removeBlocker(script.params_20[0].get());
     return FlowControl.CONTINUE;
   }
 

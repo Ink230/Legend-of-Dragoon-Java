@@ -33,7 +33,6 @@ import legend.game.types.MessageBoxType;
 import legend.game.wmap.preset.WorldMapPreset;
 import legend.game.wmap.preset.WorldMapPresetEntry;
 import legend.game.wmap.preset.WorldMapPresetManager;
-import legend.lodmod.LodEngineStateTypes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.legendofdragoon.modloader.registries.RegistryDelegate;
@@ -270,7 +269,7 @@ public class NewCampaignScreen extends VerticalLayoutScreen {
       ConfigStorage.saveConfig(CONFIG, ConfigStorageLocation.CAMPAIGN, this.state.campaign.path.resolve("campaign_config.dcnf"));
 
       try {
-        SAVES.newSave(SItem.chapterNames_80114248[0], Scus94491BpeSegment_800b.campaignType.get(), LodEngineStateTypes.SUBMAP.get().constructor_00.get(), this.state);
+        SAVES.newSave(SItem.chapterNames_80114248[0], Scus94491BpeSegment_800b.campaignType.get(), Scus94491BpeSegment_800b.campaignType.get().initialEngineState(this.state), this.state);
       } catch(final SaveFailedException e) {
         LOGGER.warn("Failed to create initial save", e);
       }
