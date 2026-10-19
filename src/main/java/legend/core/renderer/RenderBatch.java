@@ -11,6 +11,7 @@ import java.nio.FloatBuffer;
 
 import static legend.core.GameEngine.CONFIG;
 import static legend.core.MathHelper.PI;
+import static legend.game.EngineStates.currentEngineState_8004dd04;
 
 public class RenderBatch {
   public final RenderEngine engine;
@@ -218,7 +219,8 @@ public class RenderBatch {
   private final Matrix4f temp = new Matrix4f();
 
   private static boolean shouldSnap() {
-    return CONFIG.getConfig(CoreMod.SHADER_ENABLE_CRT_CONFIG.get()) && CONFIG.getConfig(CoreMod.SHADER_PIXELATE_CONFIG.get()) != legend.core.renderer.PixelateMode.NONE;
+    return (currentEngineState_8004dd04 == null || currentEngineState_8004dd04.allowsPostProcessing())
+      && CONFIG.getConfig(CoreMod.SHADER_ENABLE_CRT_CONFIG.get()) && CONFIG.getConfig(CoreMod.SHADER_PIXELATE_CONFIG.get()) != legend.core.renderer.PixelateMode.NONE;
   }
 
   private static Matrix4f setSnappedTranslation(final Matrix4f dest, final float x, final float y, final float z) {

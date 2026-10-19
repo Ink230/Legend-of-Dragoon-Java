@@ -284,6 +284,7 @@ public class RenderEngine {
   /** The actual height for rendering (taking into account resolution config) */
   private int renderHeight;
   private float renderAspectRatio;
+  private Resolution renderResolution;
 
   private long lastFrame;
   private double vsyncCount;
@@ -591,6 +592,8 @@ public class RenderEngine {
         }
       }
 
+      if(this.renderResolution != this.effectiveResolution()) this.updateResolution();
+
       if(this.resizeRenderBuffers) {
         this.resizeRenderBuffers = false;
         this.resizeRenderBuffers();
@@ -695,7 +698,8 @@ public class RenderEngine {
         // use screen shader
         screenShader.use();
 
-        final boolean enableCrt = CONFIG.getConfig(SHADER_ENABLE_CRT_CONFIG.get());
+        final boolean enableCrt = CONFIG.getConfig(SHADER_ENABLE_CRT_CONFIG.get())
+          && (currentEngineState_8004dd04 == null || currentEngineState_8004dd04.allowsPostProcessing());
         screenShaderOptions.enableCrt(enableCrt);
 
         if(enableCrt) {
@@ -1251,6 +1255,11 @@ public class RenderEngine {
     this.onResize(this.window, this.window.getWidth(), this.window.getHeight());
   }
 
+  private Resolution effectiveResolution() {
+    final Resolution override = currentEngineState_8004dd04 == null ? null : currentEngineState_8004dd04.getRenderResolution();
+    return override == null ? CONFIG.getConfig(RESOLUTION_CONFIG.get()) : override;
+  }
+
   private void onResize(final Window window, final int width, final int height) {
     if(width == 0 && height == 0) {
       return;
@@ -1258,7 +1267,8 @@ public class RenderEngine {
 
     LOGGER.info("Resizing window to %dx%d", width, height);
 
-    final Resolution res = CONFIG.getConfig(RESOLUTION_CONFIG.get());
+    final Resolution res = this.effectiveResolution();
+    this.renderResolution = res;
     if(res == Resolution.NATIVE) {
       this.renderWidth = (int)(width * (this.mainBatch.nativeWidth / 320.0f));
       this.renderHeight = height;

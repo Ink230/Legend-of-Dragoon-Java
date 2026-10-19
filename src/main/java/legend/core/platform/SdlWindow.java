@@ -367,6 +367,19 @@ public class SdlWindow extends Window {
   }
 
   @Override
+  public void setMinimumSize(final int width, final int height) {
+    if(width <= 0 || height <= 0) throw new IllegalArgumentException("Window minimum size must be positive");
+    if(!SDL_SetWindowMinimumSize(this.window, width, height)) {
+      this.err(false, "SetWindowMinimumSize");
+      return;
+    }
+    super.setMinimumSize(width, height);
+    if(this.width < width || this.height < height) {
+      this.err(SDL_SetWindowSize(this.window, Math.max(width, this.width), Math.max(height, this.height)), "SetWindowSize");
+    }
+  }
+
+  @Override
   public boolean hasFocus() {
     return this.hasFocus;
   }

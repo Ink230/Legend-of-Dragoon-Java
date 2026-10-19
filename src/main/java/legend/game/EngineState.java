@@ -2,6 +2,7 @@ package legend.game;
 
 import de.jcm.discordgamesdk.activity.Activity;
 import legend.core.platform.input.InputAction;
+import legend.core.renderer.Resolution;
 import legend.core.tags.Tag;
 import legend.game.saves.SavedGame;
 import legend.game.scripting.FlowControl;
@@ -153,6 +154,17 @@ public abstract class EngineState<T extends EngineState<T>> {
 
   public RenderMode getRenderMode() {
     return RenderMode.PERSPECTIVE;
+  }
+
+  /** Optional state-local render resolution; null retains the user's configured resolution. */
+  @Nullable
+  public Resolution getRenderResolution() {
+    return null;
+  }
+
+  /** Authoring and utility states may opt out of gameplay screen effects. */
+  public boolean allowsPostProcessing() {
+    return true;
   }
 
   public void inputActionPressed(final InputAction action, final boolean repeat) {

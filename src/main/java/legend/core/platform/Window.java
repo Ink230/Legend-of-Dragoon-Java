@@ -7,6 +7,8 @@ import java.nio.file.Path;
 
 public abstract class Window {
   private final WindowEvents events = new WindowEvents(this);
+  private int minimumWidth = 320;
+  private int minimumHeight = 240;
 
   public abstract RenderApi getRenderApi();
 
@@ -29,6 +31,16 @@ public abstract class Window {
 
   public abstract int getWidth();
   public abstract int getHeight();
+  public int getMinimumWidth() { return this.minimumWidth; }
+  public int getMinimumHeight() { return this.minimumHeight; }
+
+  /** Sets the platform window's minimum client size when supported. */
+  public void setMinimumSize(final int width, final int height) {
+    if(width <= 0 || height <= 0) throw new IllegalArgumentException("Window minimum size must be positive");
+    this.minimumWidth = width;
+    this.minimumHeight = height;
+  }
+
   public abstract boolean hasFocus();
 
   public abstract InputClass getInputClass();
