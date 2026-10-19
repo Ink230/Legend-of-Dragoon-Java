@@ -30,7 +30,12 @@ public final class Bootstrapper {
     }
     Wait.waitFor(() -> !GameEngine.isLoading(), 60_000, "engine loading");
     Wait.waitFor(() -> RENDERER.window() != null, 30_000, "SDL window created");
-    Input.focusGameWindow();
+    Harness.onEngineThread(() -> {
+      GameEngine.CONFIG.setConfig(legend.game.modding.coremod.CoreMod.RECEIVE_INPUT_ON_INACTIVE_WINDOW_CONFIG.get(), true);
+      legend.game.saves.ConfigStorage.saveConfig(GameEngine.CONFIG, legend.game.saves.ConfigStorageLocation.GLOBAL, java.nio.file.Path.of("config.dcnf"));
+      return null;
+    });
+    Input.routeBackgroundInput();
     return engine;
   }
 }

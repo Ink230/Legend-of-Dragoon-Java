@@ -24,6 +24,16 @@ public final class Input {
     Wait.waitFor(() -> legend.core.GameEngine.PLATFORM.getLastWindow() == RENDERER.window(), 10_000, "game window input focus");
   }
 
+  /** Selects the SDL event target without raising or activating the native window. */
+  public static void routeBackgroundInput() {
+    focusGameWindow();
+    final SDL_Event event = SDL_Event.create();
+    event.type(org.lwjgl.sdl.SDLEvents.SDL_EVENT_WINDOW_FOCUS_LOST);
+    event.window().windowID(SDLVideo.SDL_GetWindowID(((SdlWindow)RENDERER.window()).getWindowPtr()));
+    if(!SDL_PushEvent(event)) throw new IllegalStateException("Could not queue background window input routing");
+    Wait.waitFor(() -> !RENDERER.window().hasFocus(), 10_000, "game accepts targeted input without window focus");
+  }
+
   public static void sendKeyDown(final InputKey key) {
     final SDL_Event e = SDL_Event.create();
 
